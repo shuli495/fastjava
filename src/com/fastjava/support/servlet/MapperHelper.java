@@ -86,8 +86,8 @@ public class MapperHelper {
 	
 	//读取文件包路径
 	public Map<String,String> readPath(String projectPath) {
-		String javaPath = "src\\main\\java\\";		//java包
-		String resourcesPath = "src\\main\\resources\\";		//配置文件
+		String javaPath = "src"+File.separator+"main"+File.separator+"java"+File.separator;		//java包
+		String resourcesPath = "src"+File.separator+"main"+File.separator+"resources"+File.separator;		//配置文件
 		Map<String,String> replaceMap = new HashMap<>();
 		
 		//遍历项目子目录
@@ -97,7 +97,7 @@ public class MapperHelper {
 			String rePath = "\"" + path.replaceAll("\\\\", "\\\\\\\\") + "\"";
 			
 			if((index=path.indexOf(javaPath)) != -1) {	//java类路径
-				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".")+"\"";
+				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".").replaceAll(File.separator,".")+"\"";
 				if(path.endsWith("action")) {
 					replaceMap.put("actionNameSpace", nameSpace);
 					replaceMap.put("actionPath", rePath);
