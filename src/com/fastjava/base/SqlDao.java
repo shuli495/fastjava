@@ -21,7 +21,6 @@ public class SqlDao extends SqlSessionDaoSupport {
 	
 	/**
 	 * 设置mapper XML的namespace
-	 * @param namespace Name
 	 */
 	protected SqlDao() {
 		this.mapperName = this.getClass().getName() + "Mapper.";
@@ -78,7 +77,7 @@ public class SqlDao extends SqlSessionDaoSupport {
 		 * 删除
 		 * 调用mapperXml中id为sqlId的delete sql
 		 * @param sqlId
-		 * @param Object
+		 * @param obj
 		 */
 		public int delete(String sqlId, Object obj) {
 			return getSqlSession().delete(mapperName + sqlId, obj);
@@ -88,7 +87,7 @@ public class SqlDao extends SqlSessionDaoSupport {
 		 * 查询
 		 * 调用mapperXml中id为sqlId的select sql
 		 * @param sqlId
-		 * @param Object
+		 * @param obj
 		 * @return bean
 		 */
 		public <T> T selectOne(String sqlId, Object obj) {
@@ -99,7 +98,7 @@ public class SqlDao extends SqlSessionDaoSupport {
 		 * 列表查询
 		 * 调用mapperXml中id为sqlId的select sql
 		 * @param sqlId
-		 * @param Object
+		 * @param obj
 		 * @return List<bean>
 		 */
 		public <E> List<E> selectList(String sqlId, Object obj) {
@@ -110,7 +109,6 @@ public class SqlDao extends SqlSessionDaoSupport {
 		 * 列表查询 无条件
 		 * 调用mapperXml中id为sqlId的select sql
 		 * @param sqlId
-		 * @param bean
 		 * @return List<bean>
 		 */
 		public <E> List<E> selectList(String sqlId) {
