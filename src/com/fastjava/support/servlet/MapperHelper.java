@@ -451,8 +451,9 @@ public class MapperHelper {
 			getAndSet.append("\tpublic ").append(type).append(" get").append(toClassName(name)).append("() {\n")
 				     .append("\t\treturn ").append(name).append(";\n")
 				     .append("\t}\n\n")
-				     .append("\tpublic void set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
+				     .append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
 				     .append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
+					 .append("\t\treturn this;\n")
 				     .append("\t}\n\n");
 		}
 		
@@ -514,44 +515,44 @@ public class MapperHelper {
 	private void createService(String path) {
 		StringBuffer code = new StringBuffer();
 
-//		List<Map<String,String>> tableColumnList = columnList();
+		List<Map<String,String>> tableColumnList = columnList();
 		
-//		//遍历当前表的列
-//		StringBuffer upColumn = new StringBuffer();
-//		for(Map<String,String> columnMap : tableColumnList) {
-//			String name = toClassName(columnJavaName(columnMap));	//当前列明
-//			String remarks = columnRemarks(columnMap);	//当前列注释
-//			String type = columnType(columnMap);	//当前列数据类型
-//
-//			//不设置修改时间
-//			if(name.toLowerCase().equals(updateTimeColumn.toLowerCase())) {
-//				continue;
-//			}
-//			
-//			//添加备注
-//			if(!"".equals(remarks)) {
-//				upColumn.append("\t\t").append(remarks).append("\n");
-//			}
-//
-//			
-//			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
-//			if("long".equals(type) || "float".equals(type) || "double".equals(type)) {
-//				upColumn.append("\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n");
-//			} else {
-//				upColumn.append("\t\tif(null != upBO.get").append(name).append("()) {\n")
-//						.append("\t\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n")
-//						.append("\t\t}\n");
-//			}
-//		}
-//		
-//		//修改时间
-//		String importDate = "";
-//		if(!"".equals(updateTimeColumn)) {
-//			upColumn.append("\n\t\t//修改时间\n")
-//					.append("\t\tdbBO.set").append(toClassName(updateTimeColumn)).append("(new Date());\n\n");
-//			
-//			importDate = "import java.util.Date;\n";
-//		}
+		//遍历当前表的列
+		StringBuffer upColumn = new StringBuffer();
+		for(Map<String,String> columnMap : tableColumnList) {
+			String name = toClassName(columnJavaName(columnMap));	//当前列明
+			String remarks = columnRemarks(columnMap);	//当前列注释
+			String type = columnType(columnMap);	//当前列数据类型
+
+			//不设置修改时间
+			if(name.toLowerCase().equals(updateTimeColumn.toLowerCase())) {
+				continue;
+			}
+
+			//添加备注
+			if(!"".equals(remarks)) {
+				upColumn.append("\t\t").append(remarks).append("\n");
+			}
+
+
+			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
+			if("long".equals(type) || "float".equals(type) || "double".equals(type)) {
+				upColumn.append("\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n");
+			} else {
+				upColumn.append("\t\tif(null != upBO.get").append(name).append("()) {\n")
+						.append("\t\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n")
+						.append("\t\t}\n");
+			}
+		}
+
+		//修改时间
+		String importDate = "";
+		if(!"".equals(updateTimeColumn)) {
+			upColumn.append("\n\t\t//修改时间\n")
+					.append("\t\tdbBO.set").append(toClassName(updateTimeColumn)).append("(new Date());\n\n");
+
+			importDate = "import java.util.Date;\n";
+		}
 		
 		//表注释信息
 		StringBuffer remarks = new StringBuffer();
@@ -562,9 +563,9 @@ public class MapperHelper {
 		}
 		
 		code.append("package ").append(serviceNameSpace).append(";\n\n")
-//			.append("import java.util.ArrayList;\n")
-//			.append("import java.util.List;\n")
-//			.append(importDate)
+			.append("import java.util.ArrayList;\n")
+			.append("import java.util.List;\n")
+			.append(importDate)
 			.append("import org.springframework.stereotype.Service;\n")
 			.append("import com.fastjava.base.BaseService;\n")
 			.append("import ").append(daoNameSpace).append(".").append(daoClassName).append(";\n")
@@ -573,41 +574,41 @@ public class MapperHelper {
 			.append("@Service\n")
 			.append("public class ").append(serviceClassName).append(" extends BaseService<").append(daoClassName).append(",").append(boClassName).append("> {\n\n")
 			
-//			//更新
-//			.append("\t/**\n")
-//			.append("\t * 更新\n")
-//			.append("\t */\n")
-//			.append("\tpublic int update(").append(boClassName).append(" bo) {\n")
-//			.append("\t\t//设置修改值\n")
-//			.append("\t\t").append(boClassName).append(" upBO = this.setUpdateVlaue(super.find(bo.getId()), bo);\n\n")
-//			.append("\t\t//更新\n")
-//			.append("\t\treturn super.update(upBO);\n")
-//			.append("\t}\n\n")
-//			
-//			//批量更新
-//			.append("\t/**\n")
-//			.append("\t * 批量更新\n")
-//			.append("\t */\n")
-//			.append("\tpublic int updateBatch(List<").append(boClassName).append("> boList) {\n")
-//			.append("\t\tList<").append(boClassName).append("> upList = new ArrayList<>();\n\n")
-//			.append("\t\t//设置修改值\n")
-//			.append("\t\tfor(").append(boClassName).append(" bo : boList) {\n")
-//			.append("\t\t\tupList.add(this.setUpdateVlaue(super.find(bo.getId()), bo));\n")
-//			.append("\t\t}\n\n")
-//			.append("\t\t//更新\n")
-//			.append("\t\treturn super.updateBatch(boList);\n")
-//			.append("\t}\n\n")
-//			
-//			.append("\t/**\n")
-//			.append("\t * 设置修改的属性(不为null为修改)\n")
-//			.append("\t * @param dbBO 库中最新bo\n")
-//			.append("\t * @param upBo	修改的bo\n")
-//			.append("\t * @return 修改后的bo\n")
-//			.append("\t */\n")
-//			.append("\tprivate ").append(boClassName).append(" setUpdateVlaue(").append(boClassName).append(" dbBO, ").append(boClassName).append(" upBO) {\n")
-//			.append(upColumn)
-//			.append("\t\treturn dbBO;\n")
-//			.append("\t}\n\n")
+			//更新
+			.append("\t/**\n")
+			.append("\t * 更新\n")
+			.append("\t */\n")
+			.append("\tpublic int update(").append(boClassName).append(" bo) {\n")
+			.append("\t\t//设置修改值\n")
+			.append("\t\t").append(boClassName).append(" upBO = this.setUpdateVlaue(super.baseFind(bo.getId()), bo);\n\n")
+			.append("\t\t//更新\n")
+			.append("\t\treturn super.baseUpdate(upBO);\n")
+			.append("\t}\n\n")
+
+			//批量更新
+			.append("\t/**\n")
+			.append("\t * 批量更新\n")
+			.append("\t */\n")
+			.append("\tpublic int updateBatch(List<").append(boClassName).append("> boList) {\n")
+			.append("\t\tList<").append(boClassName).append("> upList = new ArrayList<>();\n\n")
+			.append("\t\t//设置修改值\n")
+			.append("\t\tfor(").append(boClassName).append(" bo : boList) {\n")
+			.append("\t\t\tupList.add(this.setUpdateVlaue(super.baseFind(bo.getId()), bo));\n")
+			.append("\t\t}\n\n")
+			.append("\t\t//更新\n")
+			.append("\t\treturn super.baseUpdateBatch(boList);\n")
+			.append("\t}\n\n")
+
+			.append("\t/**\n")
+			.append("\t * 设置修改的属性(不为null为修改)\n")
+			.append("\t * @param dbBO 库中最新bo\n")
+			.append("\t * @param upBO	修改的bo\n")
+			.append("\t * @return 修改后的bo\n")
+			.append("\t */\n")
+			.append("\tprivate ").append(boClassName).append(" setUpdateVlaue(").append(boClassName).append(" dbBO, ").append(boClassName).append(" upBO) {\n")
+			.append(upColumn)
+			.append("\t\treturn dbBO;\n")
+			.append("\t}\n\n")
 			
 			.append("}");
 
@@ -860,7 +861,7 @@ public class MapperHelper {
 			.append("\t */\n")
 			.append("\t@RequestMapping(method=RequestMethod.PUT)\n")
 			.append("\tpublic Result update(@RequestBody ").append(boClassName).append(" bo) {\n")
-			.append("\t\tthis.service.baseUpdate(bo);\n")
+			.append("\t\tthis.service.update(bo);\n")
 			.append("\t\treturn success();\n")
 			.append("\t}\n\n")
 			
@@ -871,7 +872,7 @@ public class MapperHelper {
 			.append("\t@RequestMapping(value=\"/batch\",method=RequestMethod.PUT)\n")
 			.append("\tpublic Result updateBatch(@RequestBody ").append(boClassName).append("[] boArry) {\n")
 			.append(updateBatchSet)
-			.append("\t\tthis.service.baseUpdateBatch(boList);\n")
+			.append("\t\tthis.service.updateBatch(boList);\n")
 			.append("\t\treturn success();\n")
 			.append("\t}\n\n")
 			
