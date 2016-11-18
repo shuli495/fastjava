@@ -15,6 +15,8 @@ public class BaseBean implements Serializable {
 	private String order;	//排序
 	@JSONField(serialize = false)
 	private String sort;	//排序方式 可传单值或列表
+	@JSONField(serialize = false)
+	private Integer rowNum;	//返回几行数据 分页接口会查询总数 不需要总数使用此字段效率高
 	
 	@JSONField(serialize = false)
 	private Page page;	//分页
@@ -70,5 +72,12 @@ public class BaseBean implements Serializable {
 	public void setPage(Page page) {
 		this.page = page;
 	}
-	
+
+	public Integer getRowNum() {
+		return rowNum;
+	}
+
+	public void setRowNum(Integer rowNum) {
+		this.rowNum = rowNum;
+	}
 }

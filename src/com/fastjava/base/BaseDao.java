@@ -113,6 +113,7 @@ public class BaseDao<B extends BaseBean> extends SqlDao {
 	 * @return bean
 	 */
 	public B baseFindByOr(B bean) {
+		bean.setRowNum(1);
 		List<B> list = baseQueryByOr(bean);
 		return list.size() == 0 ? null : list.get(0);
 	}
@@ -124,6 +125,7 @@ public class BaseDao<B extends BaseBean> extends SqlDao {
 	 * @return bean
 	 */
 	public B baseFindByAnd(B bean) {
+		bean.setRowNum(1);
 		List<B> list = baseQueryByAnd(bean);
 		return list.size() == 0 ? null : list.get(0);
 	}

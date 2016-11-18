@@ -74,15 +74,22 @@ public class PageInterceptor implements Interceptor {
             setPageParameter(sql.toString(), connection, mappedStatement, boundSql, ((Page)rowBounds)); 
         }
 
-        //设置排序信息
         Object parameterObject = boundSql.getParameterObject();
     	if(null != parameterObject && BaseBean.class.isAssignableFrom(parameterObject.getClass())) {
+            // 设置排序信息
         	Object order = metaStatementHandler.getValue("delegate.boundSql.parameterObject.order");
         	if(!VerifyUtils.isEmpty(order)) {
             	String sort = (String)metaStatementHandler.getValue("delegate.boundSql.parameterObject.sort");
-        		sql.append(" order by ").append(order.toString()).append(" ").append(sort);
+        		sql.append(" ORDER BY ").append(order.toString()).append(" ").append(sort);
                 metaStatementHandler.setValue("delegate.boundSql.sql", sql.toString());
         	}
+
+            // 设置返回行数
+            Object rowNum = metaStatementHandler.getValue("delegate.boundSql.parameterObject.rowNum");
+            if(!VerifyUtils.isEmpty(rowNum)) {
+                sql.append(" LIMIT ").append(rowNum.toString());
+                metaStatementHandler.setValue("delegate.boundSql.sql", sql.toString());
+            }
     	}
     
         // 将执行权交给下一个拦截器
