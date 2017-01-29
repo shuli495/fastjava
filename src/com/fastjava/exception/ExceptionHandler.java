@@ -9,7 +9,6 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.alibaba.fastjson.JSON;
-import com.fastjava.response.Result;
 import com.fastjava.response.ReturnJson;
 import com.fastjava.util.CommonUtil;
 import com.fastjava.util.VerifyUtils;
@@ -28,8 +27,8 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 	@Override
 	public ModelAndView resolveException(HttpServletRequest request,
 			HttpServletResponse response, Object handler, Exception ex) {
-		ReturnJson returnJson = new ReturnJson();
-		Result result = null;
+		ReturnJson returnJson = new ReturnJson(request);
+		Object result = null;
 		
 		//错误信息 格式化空指针异常
 		String eMessage = VerifyUtils.isEmpty(ex.getMessage())?"java.lang.NullPointerException":ex.getMessage();
