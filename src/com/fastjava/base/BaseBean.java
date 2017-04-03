@@ -40,7 +40,7 @@ public class BaseBean implements Serializable {
 	public void setOrder(List<String> orders) {
 		StringBuffer orderList = new StringBuffer();
 		for(String str : orders) {
-			if(VerifyUtils.isEmpty(order)) {
+			if(VerifyUtils.isEmpty(orderList)) {
 				orderList.append(str);
 			} else {
 				orderList.append(",").append(str);
@@ -58,7 +58,9 @@ public class BaseBean implements Serializable {
 	}
 
 	public void setSort(Sort sort) {
-		this.sort = sort.toString();
+		if(null != sort) {
+			this.sort = sort.toString();
+		}
 	}
 
 	public String getOrder() {
