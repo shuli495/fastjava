@@ -26,6 +26,10 @@ public class ReturnJson {
 	 * @param request
      */
 	public ReturnJson(HttpServletRequest request) {
+		if(!"get".equalsIgnoreCase(request.getMethod())) {
+			return;
+		}
+
 		Enumeration names = request.getParameterNames();
 
 		String callback = "";
