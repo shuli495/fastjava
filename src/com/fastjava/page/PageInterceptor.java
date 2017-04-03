@@ -58,6 +58,10 @@ public class PageInterceptor implements Interceptor {
 
         BoundSql boundSql = (BoundSql) metaStatementHandler.getValue("delegate.boundSql");
         StringBuffer sql = new StringBuffer(boundSql.getSql());
+
+        if(!sql.toString().trim().toLowerCase().startsWith("select")) {
+            return invocation.proceed();
+        }
         
         //分页
         Object rowBounds = metaStatementHandler.getValue("delegate.rowBounds");
