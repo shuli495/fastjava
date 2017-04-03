@@ -2,10 +2,7 @@ package com.fastjava.base;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.alibaba.fastjson.JSONObject;
-import com.fastjava.response.Result;
-import com.fastjava.util.VerifyUtils;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fastjava.response.ReturnJson;
@@ -22,19 +19,6 @@ public class BaseAction<B extends BaseService<?, ?>> {
 	
 	@Autowired
 	public B service;
-	
-	
-	/**
-	 * 判断用户是否已登录
-	 * @return
-	 */
-	public String loginState(){
-		String ssloginuserid =  (String)request.getSession().getAttribute("ssloginuserid");
-		if(null == ssloginuserid){
-			return null;
-		}
-		return ssloginuserid;
-	}
 
 	/**
 	 * 返回success
