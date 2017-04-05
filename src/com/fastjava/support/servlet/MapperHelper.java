@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 /**
  * 类生成器
@@ -97,7 +98,7 @@ public class MapperHelper {
 			String rePath = "\"" + path.replaceAll("\\\\", "\\\\\\\\") + "\"";
 			
 			if((index=path.indexOf(javaPath)) != -1) {	//java类路径
-				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".").replaceAll(File.separator,".")+"\"";
+				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".").replaceAll(Matcher.quoteReplacement(File.separator),".")+"\"";
 				if(path.endsWith("action")) {
 					replaceMap.put("actionNameSpace", nameSpace);
 					replaceMap.put("actionPath", rePath);
@@ -110,6 +111,9 @@ public class MapperHelper {
 				} else if(path.endsWith("bo")) {
 					replaceMap.put("boNameSpace", nameSpace);
 					replaceMap.put("boPath", rePath);
+				} else if(path.endsWith("vo")) {
+					replaceMap.put("voNameSpace", nameSpace);
+					replaceMap.put("voPath", rePath);
 				}
 			} else if((index=path.indexOf(resourcesPath)) != -1) {
 				if(path.toLowerCase().endsWith("mapper")) {
@@ -134,6 +138,8 @@ public class MapperHelper {
 	private String mapperName = "";		//mapperXML名
 	private String boClassName = "";	//bo类名
 	private String boNameSpace = "";	//bo命名空间(不包含类名)
+	private String voClassName = "";	//vo类名
+	private String voNameSpace = "";	//vo命名空间(不包含类名)
 	private String daoClassName = "";	//dao类名
 	private String daoNameSpace = "";	//dao命名空间(不包含类名)
 	private String serviceClassName = "";	//service类名
@@ -188,6 +194,7 @@ public class MapperHelper {
 			this.tableRemarks = new Db().getTableRemarks(tableRs, tableName);
 			this.boClassName = tableClassName + "BO";
 			this.daoClassName = tableClassName + "Dao";
+			this.voClassName = tableClassName + "VO";
 			this.serviceClassName = tableClassName + "Service";
 			this.actionClassName = tableClassName + "Action";
 			this.mapperName = tableJavaName + "Mapper";
@@ -195,6 +202,9 @@ public class MapperHelper {
 			//设置命名空间
 			if(isNeedCreate(params, "boNameSpace")) {
 				this.boNameSpace = params.get("boNameSpace")[0];
+			}
+			if(isNeedCreate(params, "voNameSpace")) {
+				this.voNameSpace = params.get("voNameSpace")[0];
 			}
 			if(isNeedCreate(params, "daoNameSpace")) {
 				this.daoNameSpace = params.get("daoNameSpace")[0];
@@ -212,6 +222,9 @@ public class MapperHelper {
 			}
 			if(isNeedCreate(params, "boPath")) {
 				createBo(params.get("boPath")[0] + File.separator + boClassName + ".java");
+			}
+			if(isNeedCreate(params, "voPath")) {
+				createVo(params.get("voPath")[0] + File.separator + voClassName + ".java");
 			}
 			if(isNeedCreate(params, "daoPath")) {
 				createDao(params.get("daoPath")[0] + File.separator + daoClassName + ".java");
@@ -231,8 +244,9 @@ public class MapperHelper {
 	 */
 	private void createMapperXML(String path) {
 		List<Map<String,String>> tableColumnList = columnList();
-		
-		StringBuffer resultMap = new StringBuffer();			//映射关系
+
+		StringBuffer resultBOMap = new StringBuffer();			//BO映射关系
+		StringBuffer resultVOMap = new StringBuffer();			//VO映射关系
 		StringBuffer insertDbNames = new StringBuffer();		//插入数据库列","分割
 		StringBuffer insertJavaNames = new StringBuffer();		//插入实体属性列#{name}
 		StringBuffer insertBatchJavaNames = new StringBuffer();	//批量插如实体属性#{item.name}
@@ -240,9 +254,9 @@ public class MapperHelper {
 		StringBuffer updatBeatcheNames = new StringBuffer();	//批量更新列 数据库名=#{item.name}
 		StringBuffer selectByOr = new StringBuffer();			//or查询条件
 		StringBuffer selectByAnd = new StringBuffer();			//and查询条件
-		
-		resultMap.append("\t<resultMap type=\"").append(boNameSpace + "." + boClassName)
-				.append("\" id=\"").append(toJavaName(boClassName)).append("\">\n");
+
+		resultBOMap.append("\t<resultMap type=\"").append(boNameSpace + "." + boClassName).append("\" ")
+				   .append("id=\"").append(toJavaName(boClassName)).append("\">\n");
 		
 		//拼接 结果集、查询条件、插入列
 		for(Map<String,String> tableColumn : tableColumnList) {
@@ -267,7 +281,7 @@ public class MapperHelper {
 			
 			//拼接主键列
 			if(columnDbPrimary().toLowerCase().equals(dbName.toLowerCase())) {
-				resultMap.append("\t\t<id column=\"").append(dbName).append("\" property=\"").append(javaName).append("\" />\n");
+				resultBOMap.append("\t\t<id column=\"").append(dbName).append("\" property=\"").append(javaName).append("\" />\n");
 			} else {	//拼接非主键列
 				//insert
 				insertDbNames.append(dbName);
@@ -292,12 +306,17 @@ public class MapperHelper {
 				selectByAnd.append("\t\t\t<if test=\"").append(javaName).append(" != null\">\n")
 						   .append("\t\t\t\tand ").append(dbName).append("=#{" + javaName + "}\n")
 						   .append("\t\t\t</if>\n");
-				
-				resultMap.append("\t\t<result column=\"").append(dbName).append("\" property=\"").append(javaName).append("\" />\n");
+
+				resultBOMap.append("\t\t<result column=\"").append(dbName).append("\" property=\"").append(javaName).append("\" />\n");
 			}
 		}
-		
-		resultMap.append("\t</resultMap>");
+
+		resultBOMap.append("\t</resultMap>");
+
+		resultVOMap.append("\t<resultMap type=\"").append(voNameSpace + "." + voClassName).append("\" ")
+				   .append("id=\"").append(toJavaName(voClassName)).append("\" ")
+				   .append("extends=\"").append(toJavaName(boClassName)).append("\">\n")
+				   .append("\t</resultMap>");
 		
 		//逻辑删除
 		StringBuffer delLogic = new StringBuffer();
@@ -319,10 +338,11 @@ public class MapperHelper {
 		code.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
 			.append("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n")
 			.append("<mapper namespace=\"").append(daoNameSpace).append(".").append(daoClassName).append("Mapper\">\n")
-			.append(resultMap).append("\n\n")
+			.append(resultBOMap).append("\n")
+			.append(resultVOMap).append("\n\n")
 			
 			//插入
-			.append("\t<insert id=\"insert\" parameterType=\"").append(boNameSpace + "." + boClassName).append("\" useGeneratedKeys=\"true\" keyProperty=\"").append(columnDbPrimary()).append("\">\n")
+			.append("\t<insert id=\"insert\" parameterType=\"").append(voNameSpace + "." + voClassName).append("\" useGeneratedKeys=\"true\" keyProperty=\"").append(columnDbPrimary()).append("\">\n")
 			.append("\t\tINSERT ").append(tableName).append("\n")
 			.append("\t\t(").append(insertDbNames).append(")\n")
 			.append("\t\tVALUES").append("\n")
@@ -340,7 +360,7 @@ public class MapperHelper {
 			.append("\t</insert>\n\n")
 			
 			//更新
-			.append("\t<update id=\"update\" parameterType=\"").append(boNameSpace + "." + boClassName).append("\">\n")
+			.append("\t<update id=\"update\" parameterType=\"").append(voNameSpace + "." + voClassName).append("\">\n")
 			.append("\t\tUPDATE ").append(tableName).append("\n")
 			.append("\t\t<trim prefix=\"SET\" suffixOverrides=\",\">").append("\n")
 			.append(updateNames)
@@ -376,7 +396,7 @@ public class MapperHelper {
 			.append("\t</delete>\n\n")
 			
 			//根据id查找
-			.append("\t<select id=\"findById\" parameterType=\"").append(toJavaName(columnJavaPrimaryType())).append("\" resultMap=\"").append(toJavaName(boClassName)).append("\">\n")
+			.append("\t<select id=\"findById\" parameterType=\"").append(toJavaName(columnJavaPrimaryType())).append("\" resultMap=\"").append(toJavaName(voClassName)).append("\">\n")
 			.append("\t\tSELECT\n")
 			.append("\t\t").append(insertDbNames).append("\n")
 			.append("\t\tFROM ").append(tableName).append("\n")
@@ -384,7 +404,7 @@ public class MapperHelper {
 			.append("\t</select>\n\n")
 			
 			//or条件查找
-			.append("\t<select id=\"queryByOr\" parameterType=\"").append(boNameSpace + "." + boClassName).append("\" resultMap=\"").append(toJavaName(boClassName)).append("\">\n")
+			.append("\t<select id=\"queryByOr\" parameterType=\"").append(voNameSpace + "." + voClassName).append("\" resultMap=\"").append(toJavaName(voClassName)).append("\">\n")
 			.append("\t\tSELECT\n")
 			.append("\t\t").append(insertDbNames).append("\n")
 			.append("\t\tFROM ").append(tableName).append("\n")
@@ -394,7 +414,7 @@ public class MapperHelper {
 			.append("\t</select>\n\n")
 			
 			//and条件查找
-			.append("\t<select id=\"queryByAnd\" parameterType=\"").append(boNameSpace + "." + boClassName).append("\" resultMap=\"").append(toJavaName(boClassName)).append("\">\n")
+			.append("\t<select id=\"queryByAnd\" parameterType=\"").append(voNameSpace + "." + voClassName).append("\" resultMap=\"").append(toJavaName(voClassName)).append("\">\n")
 			.append("\t\tSELECT\n")
 			.append("\t\t").append(insertDbNames).append("\n")
 			.append("\t\tFROM ").append(tableName).append("\n")
@@ -417,16 +437,16 @@ public class MapperHelper {
 		StringBuffer attribute = new StringBuffer();
 		StringBuffer getAndSet = new StringBuffer();
 		StringBuffer importPack = new StringBuffer();
-		
+
 		List<Map<String,String>> tableColumnList = columnList();
-		
+
 		//遍历当前表的列
 		for(Map<String,String> columnMap : tableColumnList) {
 			String name = columnJavaName(columnMap);	//当前列驼峰格式名
 			String type = columnType(columnMap);		//当前列数据类型
 			String remarks = columnRemarks(columnMap);	//当前列注释
 			Map<String, String> annotation = columnAnnotation(tableName, columnMap);	//当前列注解
-			
+
 			//导入包
 			if("Date".equals(type) && importPack.toString().indexOf("java.util.Date") == -1) {
 				importPack.append("import java.util.Date;\n");
@@ -441,39 +461,55 @@ public class MapperHelper {
 					}
 				}
 			}
-			
+
 			//属性
 			String annotations = annotation.get("annotations");
 			attribute.append(null == annotations ? "" : annotations)
 					.append("\tprivate ").append(type).append(" ").append(name).append(";\t").append(remarks).append("\n\n");
-			
+
 			//get、set方法
 			getAndSet.append("\tpublic ").append(type).append(" get").append(toClassName(name)).append("() {\n")
-				     .append("\t\treturn ").append(name).append(";\n")
-				     .append("\t}\n\n")
-				     .append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
-				     .append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
-					 .append("\t\treturn this;\n")
-				     .append("\t}\n\n");
+					.append("\t\treturn ").append(name).append(";\n")
+					.append("\t}\n\n")
+					.append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
+					.append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
+					.append("\t\treturn this;\n")
+					.append("\t}\n\n");
 		}
-		
+
 		//表注释信息
 		StringBuffer remarks = new StringBuffer();
 		if(!VerifyUtils.isEmpty(tableRemarks)) {
 			remarks.append("/*\n")
-				   .append(" * ").append(tableRemarks).append("\n")
-				   .append(" */\n");
+					.append(" * ").append(tableRemarks).append("\n")
+					.append(" */\n");
 		}
-		
+
 		StringBuffer code = new StringBuffer();
 		code.append("package ").append(boNameSpace).append(";\n\n")
-			.append(("").equals(importPack.toString())?"":importPack.append("\n"))
-			.append("import com.fastjava.base.BaseBean;\n\n")
-			.append(remarks)
-			.append("public class ").append(boClassName).append(" extends BaseBean {\n")
+				.append(("").equals(importPack.toString())?"":importPack.append("\n"))
+				.append("import com.fastjava.base.BaseBean;\n\n")
+				.append(remarks)
+				.append("public class ").append(boClassName).append(" extends BaseBean {\n")
+				.append("\tprivate static final long serialVersionUID = 1L;\n\n")
+				.append(attribute).append("\n")
+				.append(getAndSet)
+				.append("}");
+
+		//生成文件
+		FileUtil.writeFile(code.toString(), new File(path));
+	}
+
+	/**
+	 * 创建vo层
+	 * @param path 生成路径
+	 */
+	private void createVo(String path) {
+		StringBuffer code = new StringBuffer();
+		code.append("package ").append(voNameSpace).append(";\n\n")
+			.append("import ").append(boNameSpace).append(".").append(boClassName).append(";\n\n")
+			.append("public class ").append(voClassName).append(" extends ").append(boClassName).append(" {\n")
 			.append("\tprivate static final long serialVersionUID = 1L;\n\n")
-			.append(attribute).append("\n")
-			.append(getAndSet)
 			.append("}");
 
 		//生成文件
@@ -537,10 +573,10 @@ public class MapperHelper {
 
 			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
 			if("long".equals(type) || "float".equals(type) || "double".equals(type)) {
-				upColumn.append("\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n");
+				upColumn.append("\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n");
 			} else {
-				upColumn.append("\t\tif(null != upBO.get").append(name).append("()) {\n")
-						.append("\t\t\tdbBO.set").append(name).append("(upBO.get").append(name).append("());\n")
+				upColumn.append("\t\tif(null != upVO.get").append(name).append("()) {\n")
+						.append("\t\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n")
 						.append("\t\t}\n");
 			}
 		}
@@ -565,52 +601,53 @@ public class MapperHelper {
 		code.append("package ").append(serviceNameSpace).append(";\n\n")
 			.append("import java.util.ArrayList;\n")
 			.append("import java.util.List;\n")
+			.append("import com.fastjava.exception.ThrowPrompt;\n")
 			.append(importDate)
 			.append("import org.springframework.stereotype.Service;\n")
 			.append("import com.fastjava.base.BaseService;\n")
 			.append("import ").append(daoNameSpace).append(".").append(daoClassName).append(";\n")
-			.append("import ").append(boNameSpace).append(".").append(boClassName).append(";\n\n")
+			.append("import ").append(voNameSpace).append(".").append(voClassName).append(";\n\n")
 			.append(remarks)
 			.append("@Service\n")
-			.append("public class ").append(serviceClassName).append(" extends BaseService<").append(daoClassName).append(",").append(boClassName).append("> {\n\n")
+			.append("public class ").append(serviceClassName).append(" extends BaseService<").append(daoClassName).append(",").append(voClassName).append("> {\n\n")
 			
 			//更新
 			.append("\t/**\n")
 			.append("\t * 更新\n")
 			.append("\t */\n")
-			.append("\tpublic int update(").append(boClassName).append(" bo) {\n")
+			.append("\tpublic int update(").append(voClassName).append(" vo) {\n")
 			.append("\t\t//设置修改值\n")
-			.append("\t\t").append(boClassName).append(" upBO = this.setUpdateVlaue(super.baseFind(bo.getId()), bo);\n\n")
+			.append("\t\t").append(voClassName).append(" upVO = this.setUpdateVlaue(super.baseFind(vo.getId()), vo);\n\n")
 			.append("\t\t//更新\n")
-			.append("\t\treturn super.baseUpdate(upBO);\n")
+			.append("\t\treturn super.baseUpdate(upVO);\n")
 			.append("\t}\n\n")
 
 			//批量更新
 			.append("\t/**\n")
 			.append("\t * 批量更新\n")
 			.append("\t */\n")
-			.append("\tpublic int updateBatch(List<").append(boClassName).append("> boList) {\n")
-			.append("\t\tList<").append(boClassName).append("> upList = new ArrayList<>();\n\n")
+			.append("\tpublic int updateBatch(List<").append(voClassName).append("> voList) {\n")
+			.append("\t\tList<").append(voClassName).append("> upList = new ArrayList<>();\n\n")
 			.append("\t\t//设置修改值\n")
-			.append("\t\tfor(").append(boClassName).append(" bo : boList) {\n")
-			.append("\t\t\tupList.add(this.setUpdateVlaue(super.baseFind(bo.getId()), bo));\n")
+			.append("\t\tfor(").append(voClassName).append(" vo : voList) {\n")
+			.append("\t\t\tupList.add(this.setUpdateVlaue(super.baseFind(vo.getId()), vo));\n")
 			.append("\t\t}\n\n")
 			.append("\t\t//更新\n")
-			.append("\t\treturn super.baseUpdateBatch(boList);\n")
+			.append("\t\treturn super.baseUpdateBatch(voList);\n")
 			.append("\t}\n\n")
 
 			.append("\t/**\n")
 			.append("\t * 设置修改的属性(不为null为修改)\n")
-			.append("\t * @param dbBO 库中最新bo\n")
-			.append("\t * @param upBO	修改的bo\n")
-			.append("\t * @return 修改后的bo\n")
+			.append("\t * @param dbVO 库中最新vo\n")
+			.append("\t * @param upVO	修改的vo\n")
+			.append("\t * @return 修改后的vo\n")
 			.append("\t */\n")
-			.append("\tprivate ").append(boClassName).append(" setUpdateVlaue(").append(boClassName).append(" dbBO, ").append(boClassName).append(" upBO) {\n")
-			.append("\t\tif(null == dbBO) {\n")
-			.append("\t\t\tthrow new ThrowPrompt(\"无\"+bo.getId()+\"信息！\");\n")
+			.append("\tprivate ").append(voClassName).append(" setUpdateVlaue(").append(voClassName).append(" dbVO, ").append(voClassName).append(" upVO) {\n")
+			.append("\t\tif(null == dbVO) {\n")
+			.append("\t\t\tthrow new ThrowPrompt(\"无\"+upVO.getId()+\"信息！\");\n")
 			.append("\t\t}\n\n")
 			.append(upColumn)
-			.append("\t\treturn dbBO;\n")
+			.append("\t\treturn dbVO;\n")
 			.append("\t}\n\n")
 			
 			.append("}");
@@ -631,35 +668,35 @@ public class MapperHelper {
 		//创建设置项
 		StringBuffer createSet = new StringBuffer();
 		//uuid
-		createSet.append("String".equals(columnJavaPrimaryType())?"\t\tbo.set"+toClassName(columnJavaPrimary())+"(UUID.uuid());\n\n":"");
+		createSet.append("String".equals(columnJavaPrimaryType())?"\t\tvo.set"+toClassName(columnJavaPrimary())+"(UUID.uuid());\n\n":"");
 		//创建时间
 		if(!"".equals(createTimeColumn)) {
 			createSet.append("\t\t//创建时间\n")
-					.append("\t\tbo.set").append(toClassName(createTimeColumn)).append("(new Date());\n\n");
+					.append("\t\tvo.set").append(toClassName(createTimeColumn)).append("(new Date());\n\n");
 			
 			importDate = "import java.util.Date;\n";
 		}
 		
 		//批量创建设置项
 		StringBuffer createBatchSet = new StringBuffer();
-		createBatchSet.append("\t\tif(boArry.length == 0) {\n")
+		createBatchSet.append("\t\tif(voArry.length == 0) {\n")
 					.append("\t\t\tthrow new ThrowPrompt(\"无创建内容！\");\n")
 					.append("\t\t}\n\n")
-					.append("\t\tList<").append(boClassName).append("> boList = Arrays.asList(boArry);\n\n");
+					.append("\t\tList<").append(voClassName).append("> voList = Arrays.asList(voArry);\n\n");
 		
 		if(!"".equals(createTimeColumn) || "String".equals(columnJavaPrimaryType())) {
-			createBatchSet.append("\t\tfor(").append(boClassName).append(" bo : boList) {\n");
+			createBatchSet.append("\t\tfor(").append(voClassName).append(" vo : voList) {\n");
 			
 			//uuid
 			if ("String".equals(columnJavaPrimaryType())) {
-				createBatchSet.append("String".equals(columnJavaPrimaryType()) ? "\t\t\tbo.set"
+				createBatchSet.append("String".equals(columnJavaPrimaryType()) ? "\t\t\tvo.set"
 								+ toClassName(columnJavaPrimary()) + "(UUID.uuid());\n" : "");
 			}
 			
 			//创建时间
 			if(!"".equals(createTimeColumn)) {
 				createBatchSet.append("\t\t\t//创建时间\n")
-						.append("\t\t\tbo.set").append(toClassName(createTimeColumn)).append("(new Date());\n");
+						.append("\t\t\tvo.set").append(toClassName(createTimeColumn)).append("(new Date());\n");
 				
 				if(importDate.indexOf("java.util.Date") == -1) {
 					importDate = "import java.util.Date;\n";
@@ -671,10 +708,10 @@ public class MapperHelper {
 		
 		//批量修改设置
 		StringBuffer updateBatchSet = new StringBuffer();
-		updateBatchSet.append("\t\tif(boArry.length == 0) {\n")
+		updateBatchSet.append("\t\tif(voArry.length == 0) {\n")
 					.append("\t\t\tthrow new ThrowPrompt(\"无修改内容！\");\n")
 					.append("\t\t}\n\n")
-					.append("\t\tList<").append(boClassName).append("> boList = Arrays.asList(boArry);\n\n");
+					.append("\t\tList<").append(voClassName).append("> voList = Arrays.asList(voArry);\n\n");
 		
 		//批量删除设置
 		StringBuffer delBatchSet = new StringBuffer();
@@ -699,7 +736,7 @@ public class MapperHelper {
 			
 			StringBuffer delTime = new StringBuffer();
 			if(!"".equals(delTimeColumn)) {
-				delTime.append("\t\tbo.set").append(toClassName(delTimeColumn)).append("(new Date());\t//删除时间\n\n");
+				delTime.append("\t\tvo.set").append(toClassName(delTimeColumn)).append("(new Date());\t//删除时间\n\n");
 			}
 			
 			//删除标记设置
@@ -716,11 +753,11 @@ public class MapperHelper {
 					.append("\t */\n")
 					.append("\t@RequestMapping(value=\"/logic/{id}\",method=RequestMethod.DELETE)\n")
 					.append("\tpublic Result deleteLogic(@PathVariable ").append(columnJavaPrimaryType()).append(" id) {\n")
-					.append("\t\t").append(boClassName).append(" bo = this.service.find(id);\n")
-					.append("\t\tbo.set").append(toClassName(columnJavaPrimary())).append("(id);\n")
-					.append("\t\tbo.set").append(toClassName(delColumn)).append("(").append(setFlag).append(");\t//删除标记\n")
+					.append("\t\t").append(voClassName).append(" vo = this.service.find(id);\n")
+					.append("\t\tvo.set").append(toClassName(columnJavaPrimary())).append("(id);\n")
+					.append("\t\tvo.set").append(toClassName(delColumn)).append("(").append(setFlag).append(");\t//删除标记\n")
 					.append(delTime)
-					.append("\t\tthis.service.baseDeleteLogic(bo);\n")
+					.append("\t\tthis.service.baseDeleteLogic(vo);\n")
 					.append("\t\treturn success();\n")
 					.append("\t}\n\n")
 					
@@ -731,15 +768,15 @@ public class MapperHelper {
 					.append("\tpublic Result deleteLogicBatch(@RequestBody List<").append(columnJavaPrimaryType()).append("> idList) {\n")
 					.append(delBatchSet)
 					.append("\t\t//设置id、删除标记\n")
-					.append("\t\tList<").append(boClassName).append("> boList = new ArrayList<>();\n")
+					.append("\t\tList<").append(voClassName).append("> boList = new ArrayList<>();\n")
 					.append("\t\tfor(").append(columnJavaPrimaryType()).append(" id : idList) {\n")
-					.append("\t\t\t").append(boClassName).append(" bo = this.service.find(id);\n")
-					.append("\t\t\tbo.set").append(toClassName(columnJavaPrimary())).append("(id);\n")
-					.append("\t\t\tbo.set").append(toClassName(delColumn)).append("(").append(setFlag).append(");\t//删除标记\n")
+					.append("\t\t\t").append(voClassName).append(" vo = this.service.find(id);\n")
+					.append("\t\t\tvo.set").append(toClassName(columnJavaPrimary())).append("(id);\n")
+					.append("\t\t\tvo.set").append(toClassName(delColumn)).append("(").append(setFlag).append(");\t//删除标记\n")
 					.append("\t").append(delTime)
-					.append("\t\t\tboList.add(bo);\n")
+					.append("\t\t\tboList.add(vo);\n")
 					.append("\t\t}\n\n")
-					.append("\t\tthis.service.baseDeleteLogicBatch(boList);\n")
+					.append("\t\tthis.service.baseDeleteLogicBatch(voList);\n")
 					.append("\t\treturn success();\n")
 					.append("\t}\n\n");
 		}
@@ -754,7 +791,7 @@ public class MapperHelper {
 		queryCondition.append("@RequestParam(required = false) Integer pageSize, ")
 				      .append("@RequestParam(required = false) Integer pageNum,\n")
 					  .append("\t\t\t\t\t\t@RequestParam(required = false) String sort, ")
-					  .append("@RequestParam(required = false) String order,");
+					  .append("@RequestParam(required = false) String order");
 
 		int nIndex = 1;	//参数换行序列
 		for(int i=0; i<tableColumnList.size(); i++) {
@@ -771,6 +808,10 @@ public class MapperHelper {
 			
 			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
 			if(!"long".equals(columType) && !"float".equals(columType) && !"double".equals(columType) && !"Date".equals(columType)) {
+				//参数逗号
+				if(i != tableColumnList.size() - 1) {
+					queryCondition.append(",");
+				}
 
 				//参数换行
 				if(nIndex%2 == 1) {	//2个换行
@@ -779,13 +820,8 @@ public class MapperHelper {
 					queryCondition.append(" ");
 				}
 				nIndex++;
-				
-				queryCondition.append("@RequestParam(required = false) ").append(columType).append(" ").append(columName);
 
-				//参数逗号
-				if(i != tableColumnList.size() - 1) {
-					queryCondition.append(",");
-				}
+				queryCondition.append("@RequestParam(required = false) ").append(columType).append(" ").append(columName);
 
 
 				//添加备注
@@ -795,7 +831,7 @@ public class MapperHelper {
 				
 				//set参数
 				queryConditionSet.append("\t\tif(null != ").append(columName).append(") {\n")
-							.append("\t\t\tbo.set").append(toClassName(columName)).append("(").append(columName).append(");\n")
+							.append("\t\t\tvo.set").append(toClassName(columName)).append("(").append(columName).append(");\n")
 							.append("\t\t}\n");
 				
 				if("".equals(importRequestParam.toString())) {
@@ -828,7 +864,7 @@ public class MapperHelper {
 			.append("import com.fastjava.page.Page;\n")
 			.append("import com.fastjava.base.BaseAction;\n")
 			.append("import com.fastjava.exception.ThrowPrompt;\n")
-			.append("import ").append(boNameSpace).append(".").append(boClassName).append(";\n")
+			.append("import ").append(voNameSpace).append(".").append(voClassName).append(";\n")
 			.append("import ").append(serviceNameSpace).append(".").append(serviceClassName).append(";\n\n")
 			.append(remarks)
 			.append("@RestController\n")
@@ -840,10 +876,10 @@ public class MapperHelper {
 			.append("\t * 创建\n")
 			.append("\t */\n")
 			.append("\t@RequestMapping(method=RequestMethod.POST)\n")
-			.append("\tpublic Object create(@RequestBody ").append(boClassName).append(" bo) {\n")
+			.append("\tpublic Object create(@RequestBody ").append(voClassName).append(" vo) {\n")
 			.append(createSet)
-			.append("\t\tthis.service.baseInsert(bo);\n")
-			.append("\t\treturn success(bo.get").append(toClassName(columnJavaPrimary())).append("()").append(");\n")
+			.append("\t\tthis.service.baseInsert(vo);\n")
+			.append("\t\treturn success(vo.get").append(toClassName(columnJavaPrimary())).append("()").append(");\n")
 			.append("\t}\n\n")
 			
 			//createBatch
@@ -851,9 +887,9 @@ public class MapperHelper {
 			.append("\t * 批量创建\n")
 			.append("\t */\n")
 			.append("\t@RequestMapping(value=\"/batch\",method=RequestMethod.POST)\n")
-			.append("\tpublic Object createBatch(@RequestBody ").append(boClassName).append("[] boArry) {\n")
+			.append("\tpublic Object createBatch(@RequestBody ").append(voClassName).append("[] voArry) {\n")
 			.append(createBatchSet)
-			.append("\t\tthis.service.baseInsertBatch(boList);\n")
+			.append("\t\tthis.service.baseInsertBatch(voList);\n")
 			.append("\t\treturn success();\n")
 			.append("\t}\n\n")
 			
@@ -862,9 +898,9 @@ public class MapperHelper {
 			.append("\t * 更新\n")
 			.append("\t */\n")
 			.append("\t@RequestMapping(value=\"/{id}\",method=RequestMethod.PUT)\n")
-			.append("\tpublic Object update(@PathVariable String id, @RequestBody ").append(boClassName).append(" bo) {\n")
-			.append("\t\tbo.set").append(toClassName(columnJavaPrimary())).append("(id)").append(");\n")
-			.append("\t\tthis.service.update(bo);\n")
+			.append("\tpublic Object update(@PathVariable String id, @RequestBody ").append(voClassName).append(" vo) {\n")
+			.append("\t\tvo.set").append(toClassName(columnJavaPrimary())).append("(id);\n")
+			.append("\t\tthis.service.update(vo);\n")
 			.append("\t\treturn success();\n")
 			.append("\t}\n\n")
 			
@@ -873,9 +909,9 @@ public class MapperHelper {
 			.append("\t * 批量更新\n")
 			.append("\t */\n")
 			.append("\t@RequestMapping(value=\"/batch\",method=RequestMethod.PUT)\n")
-			.append("\tpublic Object updateBatch(@RequestBody ").append(boClassName).append("[] boArry) {\n")
+			.append("\tpublic Object updateBatch(@RequestBody ").append(voClassName).append("[] voArry) {\n")
 			.append(updateBatchSet)
-			.append("\t\tthis.service.updateBatch(boList);\n")
+			.append("\t\tthis.service.updateBatch(voList);\n")
 			.append("\t\treturn success();\n")
 			.append("\t}\n\n")
 			
@@ -918,16 +954,16 @@ public class MapperHelper {
 			.append("\t */\n")
 			.append("\t@RequestMapping(method=RequestMethod.GET)\n")
 			.append("\tpublic Object query(").append(queryCondition).append(") {\n")
-			.append("\t\t").append(boClassName).append(" bo = new ").append(boClassName).append("();\n")
+			.append("\t\t").append(voClassName).append(" vo = new ").append(voClassName).append("();\n")
 			.append(queryConditionSet).append("\n")
 			.append("\t\tif(pageSize != null && pageNum != null && pageSize != 0 && pageNum != 0) {	//分页查询\n")
 			.append("\t\t\tPage page = new Page();\n")
 			.append("\t\t\tpage.setPageSize(pageSize);\n")
 			.append("\t\t\tpage.setPageNum(pageNum);\n")
-			.append("\t\t\tbo.setPage(page);\n\n")
-			.append("\t\t\treturn success(this.service.baseQueryPageByAnd(bo));\n")
+			.append("\t\t\tvo.setPage(page);\n\n")
+			.append("\t\t\treturn success(this.service.baseQueryPageByAnd(vo));\n")
 			.append("\t\t} else {	//列表查询\n")
-			.append("\t\t\treturn success(this.service.baseQueryByAnd(bo));\n")
+			.append("\t\t\treturn success(this.service.baseQueryByAnd(vo));\n")
 			.append("\t\t}\n")
 			.append("\t}\n\n")
 			

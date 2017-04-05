@@ -26,6 +26,11 @@ package com.fastjava.support.html;
 				<div class="inputDiv">文件路径&nbsp;<input type="text" id="boPath" name="boPath"/></div>
 			</div>
 			<div class="classDiv">
+				VO：</br>
+				<div class="inputDiv">命名空间&nbsp;<input type="text" id="voNameSpace" name="voNameSpace"/></div>
+				<div class="inputDiv">文件路径&nbsp;<input type="text" id="voPath" name="voPath"/></div>
+			</div>
+			<div class="classDiv">
 				MapperXML：</br>
 				<div class="inputDiv">文件路径&nbsp;<input type="text" id="mapperPath" name="mapperPath"/></div>
 			</div>
@@ -71,6 +76,8 @@ var daoNameSpace;
 var daoPath;
 var boNameSpace;
 var boPath;
+var voNameSpace;
+var voPath;
 var mapperPath;
 var validationMessagesPath;
 
@@ -85,6 +92,8 @@ function onloadFunction() {
 	document.getElementById("daoPath").value = typeof(daoPath)=="undefined"?"":daoPath;
 	document.getElementById("boNameSpace").value = typeof(boNameSpace)=="undefined"?"":boNameSpace;
 	document.getElementById("boPath").value = typeof(boPath)=="undefined"?"":boPath;
+	document.getElementById("voNameSpace").value = typeof(voNameSpace)=="undefined"?"":voNameSpace;
+	document.getElementById("voPath").value = typeof(voPath)=="undefined"?"":voPath;
 	document.getElementById("mapperPath").value = typeof(mapperPath)=="undefined"?"":mapperPath;
 	document.getElementById("validationMessagesPath").value = typeof(validationMessagesPath)=="undefined"?"":validationMessagesPath;
 
@@ -200,7 +209,7 @@ function setChkVal() {
 }
 .content {
 	background-color: white;
-	height:560px;
+	height:660px;
 	color:#4E4E4E;
 }
 .tableSearch {
@@ -313,6 +322,11 @@ public class MapperHelperHtml {
                 .append(newLine).append("				<div class=\"inputDiv\">文件路径&nbsp;<input type=\"text\" id=\"boPath\" name=\"boPath\"/></div>")
                 .append(newLine).append("			</div>")
                 .append(newLine).append("			<div class=\"classDiv\">")
+                .append(newLine).append("				VO：</br>")
+                .append(newLine).append("				<div class=\"inputDiv\">命名空间&nbsp;<input type=\"text\" id=\"voNameSpace\" name=\"voNameSpace\"/></div>")
+                .append(newLine).append("				<div class=\"inputDiv\">文件路径&nbsp;<input type=\"text\" id=\"voPath\" name=\"voPath\"/></div>")
+                .append(newLine).append("			</div>")
+                .append(newLine).append("			<div class=\"classDiv\">")
                 .append(newLine).append("				MapperXML：</br>")
                 .append(newLine).append("				<div class=\"inputDiv\">文件路径&nbsp;<input type=\"text\" id=\"mapperPath\" name=\"mapperPath\"/></div>")
                 .append(newLine).append("			</div>")
@@ -358,6 +372,8 @@ public class MapperHelperHtml {
                 .append(newLine).append("var daoPath;")
                 .append(newLine).append("var boNameSpace;")
                 .append(newLine).append("var boPath;")
+                .append(newLine).append("var voNameSpace;")
+                .append(newLine).append("var voPath;")
                 .append(newLine).append("var mapperPath;")
                 .append(newLine).append("var validationMessagesPath;")
                 .append(newLine).append("")
@@ -372,6 +388,8 @@ public class MapperHelperHtml {
                 .append(newLine).append("	document.getElementById(\"daoPath\").value = typeof(daoPath)==\"undefined\"?\"\":daoPath;")
                 .append(newLine).append("	document.getElementById(\"boNameSpace\").value = typeof(boNameSpace)==\"undefined\"?\"\":boNameSpace;")
                 .append(newLine).append("	document.getElementById(\"boPath\").value = typeof(boPath)==\"undefined\"?\"\":boPath;")
+                .append(newLine).append("	document.getElementById(\"voNameSpace\").value = typeof(voNameSpace)==\"undefined\"?\"\":voNameSpace;")
+                .append(newLine).append("	document.getElementById(\"voPath\").value = typeof(voPath)==\"undefined\"?\"\":voPath;")
                 .append(newLine).append("	document.getElementById(\"mapperPath\").value = typeof(mapperPath)==\"undefined\"?\"\":mapperPath;")
                 .append(newLine).append("	document.getElementById(\"validationMessagesPath\").value = typeof(validationMessagesPath)==\"undefined\"?\"\":validationMessagesPath;")
                 .append(newLine).append("")
@@ -487,7 +505,7 @@ public class MapperHelperHtml {
                 .append(newLine).append("}")
                 .append(newLine).append(".content {")
                 .append(newLine).append("	background-color: white;")
-                .append(newLine).append("	height:560px;")
+                .append(newLine).append("	height:660px;")
                 .append(newLine).append("	color:#4E4E4E;")
                 .append(newLine).append("}")
                 .append(newLine).append(".tableSearch {")
