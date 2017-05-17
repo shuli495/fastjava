@@ -1344,7 +1344,7 @@ public class MapperHelper {
 	 * @return 是否存在
 	 */
 	private boolean isNeedCreate(Map<String,String[]> params, String paramName) {
-		if(params.get(paramName).length > 0 && !"".equals(params.get(paramName)[0])) {
+		if(null != params.get(paramName) && params.get(paramName).length > 0 && !"".equals(params.get(paramName)[0])) {
 			return true;
 		}
 		
