@@ -68,10 +68,10 @@ public class ReturnJson {
 				data = reObj;
 			}
 		} else if("prompt".equals(type)) {	//提示
-			data = reObj.toString().replace(ThrowPrompt.RETRUN_PROMPT, "");
+			data = reObj.toString();
 		} else if("exception".equals(type)) {	//异常
-			if(!VerifyUtils.isEmpty(reObj) && reObj.toString().startsWith(ThrowException.RETRUN_EXCEPTION)) {
-				data = reObj.toString().replace(ThrowException.RETRUN_EXCEPTION, "");
+			if(!VerifyUtils.isEmpty(reObj)) {
+				data = reObj.toString();
 			} else {
 				data = "请稍后再试！";
 			}

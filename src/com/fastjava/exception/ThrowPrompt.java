@@ -1,14 +1,20 @@
 package com.fastjava.exception;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * 返回前台 提示信息
  */
 public class ThrowPrompt extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
-	public static final String RETRUN_PROMPT = "Prompt:";	//返回前台提示 标记
+	public static final String RETRUN_PROMPT = "@Prompt:";	//返回前台提示 标记
 	
     public ThrowPrompt(String msg) {
-		super(RETRUN_PROMPT + msg);
+		super(HttpServletResponse.SC_BAD_REQUEST + RETRUN_PROMPT + msg);
     }
+
+	public ThrowPrompt(String msg, int code) {
+		super(code + RETRUN_PROMPT + msg);
+	}
 }

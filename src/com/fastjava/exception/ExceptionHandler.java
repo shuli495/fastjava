@@ -3,6 +3,7 @@ package com.fastjava.exception;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.fastjson.serializer.IntegerCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -31,17 +32,21 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 		Object result = null;
 		
 		//错误信息 格式化空指针异常
-		String eMessage = VerifyUtils.isEmpty(ex.getMessage())?"java.lang.NullPointerException":ex.getMessage();
-		
-		if(eMessage.startsWith(ThrowPrompt.RETRUN_PROMPT)) {	//提示信息
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);	//状态码为400
-			result = returnJson.prompt(ex.getMessage());
+		String nullPointer = "500" + ThrowException.RETRUN_EXCEPTION + "java.lang.NullPointerException";
+		String eMessage = VerifyUtils.isEmpty(ex.getMessage()) ? nullPointer : ex.getMessage();
+
+		if(eMessage.indexOf(ThrowPrompt.RETRUN_PROMPT) != -1) {	//提示信息
+			String[] prompts = eMessage.split(ThrowPrompt.RETRUN_PROMPT);
+			response.setStatus(Integer.valueOf(prompts[0]));
+			result = returnJson.prompt(prompts[1]);
 		} else {	//异常处理
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);	//状态码为500
+			String[] exceptions = eMessage.split(ThrowException.RETRUN_EXCEPTION);
+			eMessage = exceptions[1];
+			response.setStatus(Integer.valueOf(exceptions[0]));
 			StringBuffer exMsg = new StringBuffer();
 			
 			exMsg.append("\nException:\n\t")
-				.append(eMessage.replace(ThrowException.RETRUN_EXCEPTION, "")).append("\n")
+				.append(eMessage).append("\n")
 				.append("Method:\n");
 			
 			for(StackTraceElement stack : ex.getStackTrace()) {
