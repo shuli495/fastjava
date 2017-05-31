@@ -118,10 +118,8 @@
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
-					<encoding>utf8</encoding>
-					<fork>true</fork>
-					<meminitial>512m</meminitial>
-					<maxmem>1048m</maxmem>
+					<encoding>UTF-8</encoding>
+					<useIncrementalCompilation>false</useIncrementalCompilation>
 				</configuration>
 			</plugin>
 		</plugins>
