@@ -108,5 +108,6 @@
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
+		<sourceDirectory>src/com/fastjavaframework</sourceDirectory>
 	</build>
 </project>
