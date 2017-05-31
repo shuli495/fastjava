@@ -20,7 +20,7 @@
 		<slf4j.version>1.7.12</slf4j.version>
 		<quartz.version>2.2.1</quartz.version>
 		<shiro.version>1.2.4</shiro.version>
-		<maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -119,6 +119,9 @@
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
 					<encoding>utf8</encoding>
+					<fork>true</fork>
+					<meminitial>512m</meminitial>
+					<maxmem>1048m</maxmem>
 				</configuration>
 			</plugin>
 		</plugins>
