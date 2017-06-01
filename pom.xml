@@ -107,8 +107,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>${project.artifactId}</finalName>
-		<sourceDirectory>src</sourceDirectory>
+		<defaultGoal>clean install -e</defaultGoal>
 
 		<plugins>
 			<plugin>
@@ -122,9 +121,6 @@
 					<fork>true</fork>
 					<meminitial>512m</meminitial>
 					<maxmem>1024m</maxmem>
-					<compilerArgs>
-						<arg>-e</arg>
-					</compilerArgs>
 				</configuration>
 			</plugin>
 		</plugins>
