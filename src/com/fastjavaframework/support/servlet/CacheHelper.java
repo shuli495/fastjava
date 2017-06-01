@@ -46,7 +46,7 @@ public class CacheHelper {
 	/**
 	 * 读取实体缓存信息
 	 * @param mapperPath mapper路径
-	 * @param WebApplicationContext
+	 * @param ctx
 	 * @return
 	 */
 	public Map<String,String> cacheInfo(String mapperPath, WebApplicationContext ctx) {

@@ -3,12 +3,7 @@ package com.fastjavaframework.util;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -90,7 +85,7 @@ public class CommonUtil {
 		PrintWriter out=null;
 		response.setStatus(code);
 		response.setHeader("Content-type", "application/json;charset=UTF-8");
-		
+
 		try {
 			out = response.getWriter();
 			out.print(message);
@@ -106,26 +101,26 @@ public class CommonUtil {
 	
 	public static Object setDefValue(Class clz, Class genericityClz) {
 		String clzName = clz.getName();
-		
+
 		if(clzName.equals(Object.class.getName())) {
 			return "Object";
 		} else if(clzName.equals(String.class.getName())) {
 			return "String";
 		} else if(clzName.equals(Boolean.class.getName())) {
 			return true;
-		} else if(clzName.equals(Byte.class.getName()) || clzName.equals(Short.class.getName()) || 
+		} else if(clzName.equals(Byte.class.getName()) || clzName.equals(Short.class.getName()) ||
 					clzName.equals(Integer.class.getName()) || clzName.equals(Long.class.getName())) {
 			return 0;
 		} else if(clzName.equals(Float.class.getName()) || clzName.equals(Double.class.getName())) {
 			return 0.0;
-		} else if(clzName.equals(List.class.getName()) || clzName.equals(ArrayList.class.getName()) || 
+		} else if(clzName.equals(List.class.getName()) || clzName.equals(ArrayList.class.getName()) ||
 					clzName.equals(Set.class.getName())) {
-			List list = new ArrayList();
+			List<Object> list = new ArrayList<>();
 			list.add(setDefValue(genericityClz, null));
 			list.add(setDefValue(genericityClz, null));
  			return list;
 		} else if(clzName.equals(Map.class.getName()) || clzName.equals(HashMap.class.getName())) {
-			Map map = new HashMap();
+			Map<String, String> map = new HashMap<>();
 			map.put("key1", "value1");
 			map.put("key2", "value2");
 			return map;
@@ -138,24 +133,24 @@ public class CommonUtil {
 			} catch (Exception e) {
 				return "Object";
 			}
-			
+
 			Method[] methods = clz.getMethods();
 			for(Method method : methods) {
 				if(method.getParameterTypes().length != 1) {
 					continue;
 				}
-				
+
 				try {
 					method.invoke(reObj, setDefValue(method.getParameterTypes()[0], genericityClz));
 				} catch (Exception e) {
 					continue;
 				}
 			}
-			
+
 			if(null == reObj) {
 				return "Object";
 			}
-			
+
 			return reObj;
 		}
 	}
@@ -181,7 +176,7 @@ public class CommonUtil {
 
 		return map;
 	}
-	
+
 	/**
 	 * 运行js脚本
 	 * @param js 脚本

@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 /**
  * api管理
  */
+@SuppressWarnings("unchecked")
 public class APIHelper {
 	
 	//读取spring配置文件路径

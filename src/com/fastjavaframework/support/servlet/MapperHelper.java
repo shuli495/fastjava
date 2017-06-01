@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 /**
  * 类生成器
  */
+@SuppressWarnings("unchecked")
 public class MapperHelper {
 	
 	/**
