@@ -118,7 +118,9 @@
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
-					<compilerArgument>-J -Xss10M</compilerArgument>
+					<fork>true</fork>
+					<meminitial>128m</meminitial>
+					<maxmem>512m</maxmem>
 					<encoding>UTF-8</encoding>
 					<useIncrementalCompilation>false</useIncrementalCompilation>
 				</configuration>
