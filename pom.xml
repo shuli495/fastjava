@@ -121,6 +121,11 @@
 					<fork>true</fork>
 					<meminitial>128m</meminitial>
 					<maxmem>512m</maxmem>
+					<compilerArgs>
+						<arg>-verbose</arg>
+						<arg>-e</arg>
+						<arg>-X</arg>
+					</compilerArgs>
 					<encoding>UTF-8</encoding>
 					<useIncrementalCompilation>false</useIncrementalCompilation>
 				</configuration>
