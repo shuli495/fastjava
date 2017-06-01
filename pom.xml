@@ -107,8 +107,6 @@
 	</dependencies>
 
 	<build>
-		<defaultGoal>clean install -e</defaultGoal>
-
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -118,9 +116,6 @@
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
 					<encoding>UTF-8</encoding>
-					<fork>true</fork>
-					<meminitial>512m</meminitial>
-					<maxmem>1024m</maxmem>
 				</configuration>
 			</plugin>
 		</plugins>
