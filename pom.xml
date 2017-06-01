@@ -118,8 +118,7 @@
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
-					<meminitial>128m</meminitial>
-					<maxmem>512m</maxmem>
+					<compilerArgument>-J -Xss10M</compilerArgument>
 					<encoding>UTF-8</encoding>
 					<useIncrementalCompilation>false</useIncrementalCompilation>
 				</configuration>
