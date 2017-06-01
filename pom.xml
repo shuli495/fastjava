@@ -118,16 +118,11 @@
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
-					<compilerId>eclipse</compilerId>
 					<encoding>UTF-8</encoding>
+					<fork>true</fork>
+					<meminitial>512m</meminitial>
+					<maxmem>1024m</maxmem>
 				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.codehaus.plexus</groupId>
-						<artifactId>plexus-compiler-eclipse</artifactId>
-						<version>2.2</version>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
