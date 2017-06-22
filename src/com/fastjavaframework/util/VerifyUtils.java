@@ -48,8 +48,17 @@ public class VerifyUtils {
 	}
 
 	/**
+	 * 判断对象是否非空 对象为null，字符序列长度为0，集合类、Map为empty
+	 * @param obj
+	 * @return null或空返回false
+	 */
+	public static boolean isNotEmpty(Object obj) {
+		return !isEmpty(obj);
+	}
+
+	/**
 	 * 验证IP地址是否合法
-	 * @param IP
+	 * @param ipString
 	 * @return true 格式正确 false 格式错误
 	 */
 	public Boolean isIpAdd(String ipString) {

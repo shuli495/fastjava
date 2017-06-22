@@ -98,7 +98,22 @@ public class CommonUtil {
 			}
 		}
 	}
-	
+
+	/**
+	 * 设置class的默认值
+	 * @param clz	要设置值得class
+	 * @return
+	 */
+	public static Object setDefValue(Class clz) {
+		return setDefValue(clz, null);
+	}
+
+	/**
+	 * 设置class的默认值
+	 * @param clz	要设置值得class
+	 * @param genericityClz List类型的泛型
+     * @return
+     */
 	public static Object setDefValue(Class clz, Class genericityClz) {
 		String clzName = clz.getName();
 
@@ -106,18 +121,22 @@ public class CommonUtil {
 			return "Object";
 		} else if(clzName.equals(String.class.getName())) {
 			return "String";
-		} else if(clzName.equals(Boolean.class.getName())) {
+		} else if(clzName.equals(Boolean.class.getName()) || "boolean".equals(clzName)) {
 			return true;
 		} else if(clzName.equals(Byte.class.getName()) || clzName.equals(Short.class.getName()) ||
-					clzName.equals(Integer.class.getName()) || clzName.equals(Long.class.getName())) {
+					clzName.equals(Integer.class.getName()) || clzName.equals(Long.class.getName()) ||
+					"byte".equals(clzName) || "short".equals(clzName) ||
+					"int".equals(clzName) || "long".equals(clzName)) {
 			return 0;
 		} else if(clzName.equals(Float.class.getName()) || clzName.equals(Double.class.getName())) {
 			return 0.0;
 		} else if(clzName.equals(List.class.getName()) || clzName.equals(ArrayList.class.getName()) ||
 					clzName.equals(Set.class.getName())) {
 			List<Object> list = new ArrayList<>();
-			list.add(setDefValue(genericityClz, null));
-			list.add(setDefValue(genericityClz, null));
+			if(null != genericityClz) {
+				list.add(setDefValue(genericityClz, null));
+				list.add(setDefValue(genericityClz, null));
+			}
  			return list;
 		} else if(clzName.equals(Map.class.getName()) || clzName.equals(HashMap.class.getName())) {
 			Map<String, String> map = new HashMap<>();
@@ -153,6 +172,35 @@ public class CommonUtil {
 
 			return reObj;
 		}
+	}
+
+	/**
+	 * 判断是否是自定义的类
+	 * @param clz
+	 * @return 是自定义的类true
+     */
+	public static boolean isModel(Class clz) {
+		if(clz.getName().indexOf("java.lang") == -1
+				&& !clz.getName().equals("byte") && !clz.getName().equals("short") && !clz.getName().equals("int") && !clz.getName().equals("long")
+				&& !clz.getName().equals("float") && !clz.getName().equals("double") && !clz.getName().equals("boolean") && !clz.getName().equals("char")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * 判断是否是自定义的类
+	 * @param classStr
+	 * @return 是自定义的类true
+	 */
+	public static boolean isModel(String classStr) {
+		if(!classStr.equals("byte") && !classStr.equals("short") && !classStr.equals("int") && !classStr.equals("long")
+			&& !classStr.equals("float") && !classStr.equals("double") && !classStr.equals("boolean") && !classStr.equals("char")) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
