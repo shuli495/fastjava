@@ -35,15 +35,6 @@ public class BaseAction<B extends BaseService<?, ?>> {
 	}
 
 	/**
-	 * 返回string json
-	 * @param returnStr
-	 * @return
-	 */
-	public Object success(String returnStr) {
-		return new ReturnJson(request).success(returnStr);
-	}
-
-	/**
 	 * 返回key-value json
 	 * @param returnStrKey
 	 * @param returnStrVal
