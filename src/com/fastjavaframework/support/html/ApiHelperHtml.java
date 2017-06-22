@@ -1,169 +1,5 @@
 package com.fastjavaframework.support.html;
 
-/*
-<div class="infoPage">
-	<input type="hidden" id="controllerChkHiden" name="controllerChkHiden" />
-	<input type="hidden" id="bodyHTML" name="bodyHTML" />
-
-	<div class="path content">
-			controller文件路径：<input class="xmlPath" id="controllerPath" name="controllerPath" type="text"/>
-			<button onclick="setChkControll('apiHelper_getController')">确定</button>
-	</div>
-
-	<div class="content" id="setDiv" style="height:175px">
-		<div class="title">
-			<span>设置</span>
-			<span style="padding-left:821px;">
-				<button onclick="setChkControll('apiHelper_createDoc')">生成 api</button>
-			</span>
-		</div>
-		<div>
-			<div class="divPadding">
-				<p>url公共路径：<input type="text" id="publicUrl" name="publicUrl" /></p>
-				<span>
-					controller类：
-					<div id="controllerDiv">
-					</div>
-				</span>
-			</div>
-		</div>
-	</div>
-
-	<div class="content" id="contentDiv" style="height:80px">
-		<div id="titleDiv" class="title">
-			<span>文档预览</span>
-			<span style="padding-left:800px;">
-				<button onclick="setChkControll('apiHelper_saveAsHTML')">HTML</button>
-			</span>
-		</div>
-		<div class="divPadding" id="docDiv"></div>
-	</div>
-
-</div>
-
-<script>
-var controllerPath;
-var controllerMeta;
-var publicUrl;
-var doc;
-
-function onloadFunction() {
-	//controller路径
-	document.getElementById("controllerPath").value = typeof(controllerPath)=="undefined"?"":controllerPath;
-
-	//action名称选项
-	var inputs = "";
-	if(typeof(controllerPath)!="undefined") {
-		for(var i=0; i<controllerMeta.length; i++) {
-			var checked = "";
-			if(controllerMeta[i][0] == true) {
-				checked = "checked";
-			}
-
-			if(inputs != "") {
-				inputs += "<br/>";
-			}
-			inputs += '<input type="checkbox" name="controllerChk" value="'+ controllerMeta[i][2] +'" '+ checked +'/>' + controllerMeta[i][1];
-		}
-
-		if(controllerMeta.length > 1) {
-			document.getElementById("setDiv").style.height = document.getElementById("setDiv").offsetHeight + controllerMeta.length * 21 + "px";
-		}
-	}
-	document.getElementById("controllerDiv").innerHTML = inputs;
-
-	if(typeof(publicUrl)!="undefined") {
-		document.getElementById("publicUrl").value = publicUrl;
-	}
-
-	//doc文档
-	if(typeof(doc)!="undefined") {
-		document.getElementById("docDiv").innerHTML = doc;
-	}
-
-	var jsonPres = document.getElementsByName("jsonPre");
-	for(var i=0; i<jsonPres.length ;i++) {
-		if("" != jsonPres[i].innerHTML) {
-			jsonPres[i].innerHTML = JSON.stringify(JSON.parse(jsonPres[i].innerHTML), null, "\t");
-		}
-	}
-
-	document.getElementById("contentDiv").style.height = document.getElementById("titleDiv").offsetHeight + document.getElementById("docDiv").offsetHeight + "px";
-}
-
-//读取项目路径
-function readPath() {
-	setChkControll('apiHelper');
-}
-
-//生成文档
-function setChkControll(mehtod) {
-	var chkStr = "";
-	var checkController = document.getElementsByName("controllerChk");
-	for(var i=0; i<checkController.length; i++) {
-		if(checkController[i].checked) {
-			if(chkStr != "") {
-				chkStr += ",";
-			}
-			chkStr += checkController[i].value;
-		}
-	}
-
-	document.getElementById("controllerChkHiden").value = chkStr;
-	document.getElementById("bodyHTML").value = document.getElementById("docDiv").innerHTML;
-
-	doFastJava(mehtod); //读取项目路径
-}
-</script>
-<style>
-.infoPage {
-	margin-left: auto;
-	margin-right:auto;
-	width:970px;
-}
-.content {
-	background-color: white;
-	height:510px;
-	color:#4E4E4E;
-	margin-bottom: 20px;
-}
-.path {
-	height:35px;
-	padding-top:10px;
-	padding-left:35px;
-}
-.xmlPath {
-	width: 670px;
-}
-.title {
-	height:33px;
-	border-bottom:1px solid rgba(0,0,0,.15);
-	padding-top:10px;
-	padding-left:10px;
-	font-size:16px;
-}
-.divPadding {
-	padding: 15px 35px 0px;
-}
-#docDiv {
-	background-color: white;
-}
-pre {
-	border:1px solid #ccc;
-	background-color:#F8F8F8;
-	line-height:20px;
-	padding:5px 10px;
-	margin:0px;
-	font-family:Microsoft Yahei,Helvetica Neue,Hiragino Sans GB,WenQuanYi Micro Hei,sans-serif;
-}
-table {
-	width:100%;
-}
-th {
-	background-color: #ECEBEB;
-}
-</style>
- */
 public class ApiHelperHtml {
 
     public String html() {
@@ -248,6 +84,8 @@ public class ApiHelperHtml {
                 .append(newLine).append("	//doc文档")
                 .append(newLine).append("	if(typeof(doc)!=\"undefined\") {")
                 .append(newLine).append("		document.getElementById(\"docDiv\").innerHTML = doc;")
+                .append(newLine).append("		//生成目录")
+                .append(newLine).append("		this.makeCatalogue();")
                 .append(newLine).append("	}")
                 .append(newLine).append("	")
                 .append(newLine).append("	var jsonPres = document.getElementsByName(\"jsonPre\");")
@@ -283,6 +121,7 @@ public class ApiHelperHtml {
                 .append(newLine).append("	")
                 .append(newLine).append("	doFastJava(mehtod); //读取项目路径")
                 .append(newLine).append("}")
+                .append(newLine).append(new ApiHelperTemplateHtml().commonJS())
                 .append(newLine).append("</script>")
                 .append(newLine).append("<style>")
                 .append(newLine).append(".infoPage {")
@@ -317,20 +156,7 @@ public class ApiHelperHtml {
                 .append(newLine).append("#docDiv {")
                 .append(newLine).append("	background-color: white;")
                 .append(newLine).append("}")
-                .append(newLine).append("pre {")
-                .append(newLine).append("	border:1px solid #ccc;")
-                .append(newLine).append("	background-color:#F8F8F8;")
-                .append(newLine).append("	line-height:20px;")
-                .append(newLine).append("	padding:5px 10px;")
-                .append(newLine).append("	margin:0px;")
-                .append(newLine).append("	font-family:Microsoft Yahei,Helvetica Neue,Hiragino Sans GB,WenQuanYi Micro Hei,sans-serif;")
-                .append(newLine).append("}")
-                .append(newLine).append("table {")
-                .append(newLine).append("	width:100%;")
-                .append(newLine).append("}")
-                .append(newLine).append("th {")
-                .append(newLine).append("	background-color: #ECEBEB;")
-                .append(newLine).append("}")
+                .append(newLine).append(new ApiHelperTemplateHtml().commonCSS())
                 .append(newLine).append("</style>");
 
 

@@ -5,7 +5,7 @@
 	<groupId>com.fastjavaframework</groupId>
 	<artifactId>fastjava</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.2</version>
+	<version>0.9.3</version>
 
 	<properties>
 		<spring.version>4.2.1.RELEASE</spring.version>

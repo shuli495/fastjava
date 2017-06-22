@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fastjavaframework.base.BaseBean;
+import com.fastjavaframework.base.BaseService;
 import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSON;
@@ -92,7 +93,9 @@ public class APIHelper {
 	 */
 	public Map<String, String> createDoc(String controllerInfo, String publicUrl) {
 		Map<String, String> returnMap = new HashMap<>();
+		String reHTML = "";
 		String[] controllers = controllerInfo.split(",");
+
 		for (int classIndex = 0; classIndex < controllers.length; classIndex++) {
 			String controller = controllers[classIndex];
 			if ("".equals(controller)) {
@@ -113,8 +116,9 @@ public class APIHelper {
 			String[] paths = controller.split("\\\\");
 			
 			// class包名+类名
+			String fileClassName = paths[paths.length - 1].split("\\.")[0];	//类名
 			String className = packageName.replace("package", "").replace(";", "").trim() 
-					+ "." + paths[paths.length - 1].split("\\.")[0];
+					+ "." + fileClassName;
 			
 			//当前java类对象
 			Class clz = null;
@@ -133,12 +137,17 @@ public class APIHelper {
 				String[] classNotes = javaCode.substring(packageName.length(), endIndex).replaceAll("\\/", "").split("\\*");
 				for(String classNote : classNotes) {
 					//排除import，注释
-					if(!"".equals(classNote.trim()) && !classNote.trim().startsWith("import") && !classNote.trim().startsWith("@")) {
-						clzNote = classNote.replace("\n", "");
+					if(!"".equals(classNote.trim()) && !classNote.trim().startsWith("import") && !classNote.trim().startsWith("@") && !classNote.trim().startsWith(";")) {
+						clzNote = classNote.replace("\n", "").trim();
+						break;
 					}
 				}
 				
 				javaCode = javaCode.substring(endIndex);
+			}
+
+			if(VerifyUtils.isEmpty(clzNote)) {
+				clzNote = fileClassName.trim();
 			}
 
 			// 类rest-url
@@ -242,7 +251,7 @@ public class APIHelper {
 				
 				/*----------------------------入参 begin------------------------------*/
 				StringBuffer paramterHtml = new StringBuffer();	//入参html(表格数据)
-				StringBuffer paramterJson = new StringBuffer();	//入参json
+				StringBuffer paramterBody = new StringBuffer();	//入参json
 
 				Class[] paramterTypes = method.getParameterTypes();
 				for(int i=0; i < paramterTypes.length; i++) {
@@ -270,7 +279,7 @@ public class APIHelper {
 						}
 					}
 					
-					//非4中参数不展示
+					//非以上4种参数不展示
 					if(!isReqBody && !isReqParam && !isPathVal && !isReqHeader && !isCookieVal) {
 						continue;
 					}
@@ -368,7 +377,7 @@ public class APIHelper {
 							paramterGenerosityClz = null;
 						}
 						//返回json
-						paramterJson.append(JSON.toJSON(CommonUtil.setDefValue(paramterClz, paramterGenerosityClz)).toString());
+						paramterBody.append(JSON.toJSONString(CommonUtil.setDefValue(paramterClz, paramterGenerosityClz)));
 					}
 				}
 				/*----------------------------入参 end------------------------------*/
@@ -376,224 +385,41 @@ public class APIHelper {
 
 
 				/*----------------------------出参 begin------------------------------*/
-				String returnJson = "{}";	//出参json
+				String returnBody = "";	//出参json
 				Class returnClass = method.getReturnType();	//出参class
 				
 				//无出参
-				if(Void.class.getName().equals(returnClass.getName())) {
-					returnJson = "{}";
-				} else if(Result.class.getName().equals(returnClass.getName())) {	//Relult类型行出参
+				if(Void.class.getName().equals(returnClass.getName()) || "void".equals(returnClass.getName())) {
+					returnBody = "";
+				} else if(Object.class.getName().equals(returnClass.getName())) {	//Object类型行出参
 					//方法体
 					String methodBody = getMethodBody(javaCode, method.getName());
-					
-					//截取return
-					String[] returns = methodBody.split("return");
-					for(int i=1 ; i<returns.length; i++) {
-						String returnStr = returns[i].replaceAll("\n", "").trim();
-						if(VerifyUtils.isEmpty(returnStr)) {
-							continue;
-						}
-						
-						returnStr = returnStr.split(";")[0];
-						
-						//返回方法名
-						String returnMethodName = returnStr.substring(0, returnStr.indexOf("("));
-						//返回方法参数
-						String returnMethodParamStr = returnStr.substring(returnStr.indexOf("(")+1);
-						
-						//返回方法参数名
-						String[] returnMethodParamNames = new String[]{};
-						if(returnMethodParamStr.length() > 1) {
-							returnMethodParamNames = returnMethodParamStr.substring(0, returnMethodParamStr.length() - 1).split("\\,");
-						}
+					// return内容
+					String methodReturn = this.getMethodReturn(methodBody);
 
-						Class[] returnClzs = new Class[returnMethodParamNames.length];	//返回方法参数类
-						Object[] returnObjs = new Object[returnMethodParamNames.length];//返回方法参数对象
-						
-						//返回方法无参数
-						if(returnMethodParamNames.length == 0) {
-							try {
-								//返回json(直接调用类中返回方法)
-								returnJson = JSON.toJSON(clz.getMethod(returnMethodName).invoke(returnMethodName)).toString();
-							} catch (Exception e) {
-							}
-						} else {	//返回方法有参数
-							for(int j=0; j < returnMethodParamNames.length; j++) {
-								String returnMethodParamName = returnMethodParamNames[j].trim();
-								
-								//参数是调用泛型service中方法
-								if(returnMethodParamName.startsWith("this.service.") || returnMethodParamName.startsWith("super.service.") || returnMethodParamName.startsWith("service.")) {
-									try {
-										//调用service中方法的方法名
-										String[] clzMethodItems = returnMethodParamName.split("\\(")[0].split("\\.");
-										String servicMethodName = clzMethodItems[clzMethodItems.length-1];
-										
-										//service class对象
-										Class serviceClz = (Class) ((ParameterizedType)clz.getGenericSuperclass()).getActualTypeArguments()[0];
-										
-										for(Method clzMethod : serviceClz.getMethods()) {
-											if(clzMethod.getName().equals(servicMethodName)) {
-												//service泛型中的实体对象
-												Class methodGenerosity = (Class) ((ParameterizedType)serviceClz.getGenericSuperclass()).getActualTypeArguments()[1];
-
-                                                returnClzs[j] = Object.class;
-												if(BaseBean.class.isAssignableFrom(clzMethod.getReturnType())) {
-                                                    returnObjs[j] = CommonUtil.setDefValue(methodGenerosity, null);
-												} else {
-                                                    returnObjs[j] = CommonUtil.setDefValue(clzMethod.getReturnType(), methodGenerosity);
-                                                }
-												break;
-											}
-										}
-									} catch (Exception e) {
-									}
-								}
-								
-								//过滤框架中返回success("","")方法
-								if("success".equals(returnMethodName) && returnMethodParamNames.length > 1 && j != 0) {
-									returnClzs[j] = String.class;
-									returnObjs[j] = returnObjs[0];
-									break;
-								}
-								
-								//参数是字符串 直接返回字符串内容
-								if(returnMethodParamName.startsWith("\"") && returnMethodParamName.endsWith("\"")) {
-									returnClzs[j] = String.class;
-									returnObjs[j] = returnMethodParamName.replaceAll("\"", "");
-									continue;
-								}
-								
-								//参数类名
-								String paramClzName = "";
-								Matcher paramMatcher = Pattern.compile(".+\\s+" + returnMethodParamName + "\\s*(\\)|\\=|\\;)").matcher(methodBody);
-								if (paramMatcher.find()) {
-									String[] paramClzNames = paramMatcher.group(0).split(returnMethodParamName)[0].trim().split(" ");
-									paramClzName = paramClzNames[paramClzNames.length - 1];
-								}
-								
-								//查找到参数的类名 说明返回的是对象，否则调用的方法
-								if(!"".equals(paramClzName)) {	//返回对象
-									
-									//返回类型为String 直接返回
-									if("String".equals(paramClzName)) {
-										returnClzs[j] = Object.class;
-										returnObjs[j] = "String";
-										continue;
-									} else if("Integer".equals(paramClzName) || "int".equals(paramClzName)) {	//int返回0
-										returnClzs[j] = Object.class;
-										returnObjs[j] = 0;
-										continue;
-									}
-									
-									//参数class名
-									Matcher paramImportMatcher = Pattern.compile("import\\s+.+" + paramClzName + "\\;").matcher(oldCode);
-									returnClzs[j] = Object.class;
-									if(paramImportMatcher.find()) {
-										try {
-											//返回参数对象
-											returnObjs[j] = CommonUtil.setDefValue(Class.forName(paramImportMatcher.group(0).replace("import", "").replace(";", "").trim()),null);
-										} catch (ClassNotFoundException e) {
-										}
-									}
-									
-								} else {	//调用方法
-									
-									//包含点 调用其它类中的方法，否则调用本类中的方法
-									if(returnMethodParamName.indexOf(".") != -1) {	//调用其他类的方法
-										//查找调用方法所属的类名
-										Matcher paramImportClzMatcher = Pattern
-																		.compile(".+\\s+" + returnMethodParamName.split("\\.")[0].trim() + "\\s*(\\(|\\=|\\;|\\))")
-																		.matcher(methodBody);
-										if(paramImportClzMatcher.find()) {
-                                            String matcherStr = paramImportClzMatcher.group(0).trim();
-                                            String[] paramClzs = matcherStr.split(returnMethodParamName.split("\\.")[0].trim())[0].split(" ");
-
-                                            String paramClz = "";
-                                            for(int k=paramClzs.length - 1;k>0;k--) {
-                                                if(!"".equals(paramClzs[k])) {
-                                                    paramClz = paramClzs[k];
-                                                    break;
-                                                }
-                                            }
-
-                                            if(!"".equals(paramClz)) {
-                                                //查找调用方法所属类的class
-                                                Matcher paramImportMatcher = Pattern
-                                                        .compile("import\\s+.+" + paramClz + "\\;")
-                                                        .matcher(oldCode);
-
-                                                if(paramImportMatcher.find()) {
-                                                    paramClzName = paramImportMatcher.group(0).replace("import", "").replace(";","").trim();
-                                                    try {
-                                                        //调用方法的返回值类型
-                                                        Class paramClzObj = Class.forName(paramClzName).getMethod(returnMethodParamName.split("\\.")[1].replace("()","").trim()).getReturnType();
-                                                        returnClzs[j] = paramClzObj;
-                                                        returnObjs[j] = CommonUtil.setDefValue(paramClzObj,null);
-                                                    } catch (Exception e) {
-                                                    }
-                                                }
-                                            }
-										}
-									} else {	//调用本类的方法
-										try {
-											paramClzName = clz.getMethod(returnMethodParamName).getReturnType().toString();
-											returnClzs[j] = Object.class;
-											returnObjs[j] = CommonUtil.setDefValue(Class.forName(paramClzName),null);
-										} catch (Exception e) {
-										}
-									}
-								}
-							
-							}}
-
-						//调用返回方法  返回json
-						try {
-							//计算非null参数的最大个数
-							int returnClzsMaxSize = 0;
-							for(Class reClz : returnClzs) {
-								if(null == reClz) {
-									continue;
-								}
-								returnClzsMaxSize++;
-							}
-							
-							Class[] realReturnClzs = new Class[returnClzsMaxSize];
-							Object[] realReturnObjs = new Object[returnClzsMaxSize];
-
-							//过滤null参数
-                            int idx = 0;
-							for (int k = 0; k < returnClzs.length; k++) {
-								if(null == returnClzs[k]) {
-									continue;
-								}
-								realReturnClzs[idx] = returnClzs[k];
-								realReturnObjs[idx] = returnObjs[k];
-                                idx++;
-							}
-							
-							//调用方法
-							returnJson = JSON.toJSON(clz.getMethod(returnMethodName, realReturnClzs).invoke(clz.newInstance(), realReturnObjs)).toString();
-						} catch (Exception e) {
-							returnJson = "{}";
-						}
+					try {
+						returnBody = JSON.toJSONString(this.return2Object(clz, oldCode, methodBody, methodReturn));
+					} catch (Exception e) {
+						returnBody = "";
 					}
-				} else {	//非Result类型出参
-					returnJson = JSON.toJSON(CommonUtil.setDefValue(returnClass, null)).toString();
+				} else {	//非Object类型出参
+					returnBody = JSON.toJSONString(CommonUtil.setDefValue(returnClass));
 				}
 				/*----------------------------出参 end------------------------------*/
-				
 
-				String methodHtml = notes.get(method.getName())+"</h3>"
+
+				String h3 = VerifyUtils.isEmpty(notes.get(method.getName()))?method.getName():notes.get(method.getName());
+				String methodHtml = "<span>"+h3+"</span></h3>"
 						+"<pre><b>"+requestType +"</b>&nbsp;&nbsp;"+classUrl+methodUrl+"</pre>"
 						+"<p>请求参数：</p>"
 						+"<table border=\"1\" cellspacing=\"0\" cellpadding=\"8\">"
 						+"<tr><th>参数名</th><th>位于</th><th>数据类型</th><th>必填</th><th>描述</th></tr>"
 						+ paramterHtml.toString()
 						+"</table>"
-						+"<p>请求 json：</p>"
-						+"<pre name=\"jsonPre\">" + ("".equals(paramterJson.toString()) ? "{}" : paramterJson) + "</pre>"
-						+"<p>返回 json：</p>"
-						+"<pre name=\"jsonPre\">" + ("".equals(returnJson.toString()) ? "{}" : returnJson) + "</pre></br>";
+						+"<p>请求 body：</p>"
+						+"<pre name=\"jsonPre\">" + ("".equals(paramterBody.toString()) ? "" : paramterBody) + "</pre>"
+						+"<p>返回 body：</p>"
+						+"<pre name=\"jsonPre\">" + ("".equals(returnBody.toString()) ? "" : returnBody) + "</pre></br>";
 				
 				methodIndx.put(javaCode.indexOf(method.getName()+"("), methodHtml);
 			}
@@ -610,7 +436,7 @@ public class APIHelper {
 					}
 				}
 				
-				methods[smallNum] = "<h3>"+(classIndex+1)+"."+(smallNum+1)+" "+methodIndx.get(i);
+				methods[smallNum] = "<h3>"+(classIndex+1)+"."+(smallNum+1)+"&nbsp;"+methodIndx.get(i);
 			}
 			
 			//返回html
@@ -618,34 +444,286 @@ public class APIHelper {
 			for(String method : methods) {
 				reStr.append(method);
 			}
-			returnMap.put("doc", "'<h2>"+(classIndex+1) + clzNote + "</h2>" + reStr.toString() + "'");
+
+			reHTML += "<h2>"+(classIndex+1) + "&nbsp;<span>" + clzNote + "</span></h2>" + reStr.toString();
 		}
+
+		returnMap.put("doc", "'" + reHTML + "'");
 		return returnMap;
 	}
-	
+
+	/**
+	 * 判断字符串是否是数字
+	 * @param str
+	 * @return true是数字
+     */
+	private boolean isNumber(String str) {
+		try {
+			Long.parseLong(str);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * 判断是否是boolean
+	 * @param str
+	 * @return true是boolean
+     */
+	private boolean isBoolean(String str) {
+		try {
+			Boolean.valueOf(str);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * 返回方法return的Object
+	 * @param clz		当前java类
+	 * @param clzBody	当前java代码
+	 * @param methodBody	当前方法体
+	 * @param returnString	当前方法return的代码
+     * @return	return的值得Object对象
+     */
+	private Object return2Object(Class clz, String clzBody, String methodBody, String returnString) {
+		//判断return的是方法还是变量
+		if(returnString.indexOf("(") == -1 && returnString.indexOf(")") == -1) {	// return的是变量
+			// renturn 数字
+			if(this.isNumber(returnString)) {
+				return "0";
+			}
+
+			// return 字符串
+			if(returnString.startsWith("\"") && returnString.endsWith("\"")) {
+				return "String";
+			}
+
+			// return boolean
+			if(this.isBoolean(returnString)) {
+				return true;
+			}
+
+			// return 变量
+			String variableName = "";	// 查找变量声明的对象
+			Matcher variableMatcher = Pattern.compile(".+\\s+" + returnString + "\\s*(\\)|\\=|\\;)").matcher(methodBody);
+			if (variableMatcher.find()) {
+				String[] variableNames = variableMatcher.group(0).split(returnString)[0].trim().split(" ");
+				variableName = variableNames[variableNames.length - 1];
+			}
+
+			//变量是String 直接返回
+			if("String".equals(variableName)) {
+				return "String";
+			} else if("Integer".equals(variableName) || "int".equals(variableName)) {	//变量是int返回0
+				return "0";
+			} else {	//变量是对象
+				//查找变量import的class
+				String variableClz = this.getImportClz(clzBody, variableName);
+
+				if(!"".equals(variableClz)) {
+					try {
+						return CommonUtil.setDefValue(Class.forName(variableClz));
+					} catch (ClassNotFoundException e) {
+						return "";
+					}
+				}
+			}
+		} else {	//返回的是方法名
+
+			// return的方法的名
+			String returnMethodName = returnString.substring(0, returnString.indexOf("("));
+
+			// return BaseAction<Service> 中的service
+			if(returnMethodName.startsWith("this.service.") || returnMethodName.startsWith("super.service.") || returnMethodName.startsWith("service.")) {
+				try {
+					//调用service中方法的方法名
+					String[] clzMethodItems = returnMethodName.split("\\.");
+					String servicMethodName = clzMethodItems[clzMethodItems.length-1];
+
+					// service的类
+					Class serviceClz = (Class) ((ParameterizedType)clz.getGenericSuperclass()).getActualTypeArguments()[0];
+
+					for(Method clzMethod : serviceClz.getMethods()) {
+						if(clzMethod.getName().equals(servicMethodName)) {
+							//service泛型中的实体对象
+							Class methodGenerosity = (Class) ((ParameterizedType)serviceClz.getGenericSuperclass()).getActualTypeArguments()[1];
+
+							if(BaseBean.class.isAssignableFrom(clzMethod.getReturnType())) {
+								return CommonUtil.setDefValue(methodGenerosity);
+							} else {
+								return CommonUtil.setDefValue(clzMethod.getReturnType(), methodGenerosity);
+							}
+						}
+					}
+				} catch (Exception e) {
+					return "";
+				}
+			}
+
+			// return success()/success(obj)
+			if("success".equals(returnMethodName)) {
+				//返回方法参数
+				String returnMethodParamStr = returnString.substring(returnString.indexOf("(")+1,returnString.lastIndexOf(")"));
+
+				//返回方法参数名
+				String[] returnMethodParamNames = new String[]{};
+				if(returnMethodParamStr.length() > 0) {
+					if(returnMethodParamStr.indexOf("(") < returnMethodParamStr.indexOf(",") &&
+							returnMethodParamStr.indexOf(")") > returnMethodParamStr.indexOf(",")) {
+						returnMethodParamNames = returnMethodParamStr.split("\\)\\s*,");
+					} else {
+						returnMethodParamNames = returnMethodParamStr.split("\\,");
+					}
+				}
+
+				// 无参数直接返回success()的值
+				if(returnMethodParamNames.length == 0) {
+					try {
+						return clz.getMethod(returnMethodName).invoke(clz.newInstance());
+					} catch (Exception e){
+						return "";
+					}
+				} else {	//有参数
+
+					Class[] returnClzs = new Class[returnMethodParamNames.length];	//返回方法参数类
+					Object[] returnObjs = new Object[returnMethodParamNames.length];//返回方法参数对象
+
+					// 有参数先获取参数的默认值对象
+					for(int i=0; i<returnMethodParamNames.length; i++) {
+						Object returnMethodParamNameObj = this.return2Object(clz, clzBody, methodBody, returnMethodParamNames[i]);
+						returnClzs[i] = Object.class;
+						returnObjs[i] = returnMethodParamNameObj;
+					}
+
+					// 根据参数的值返回success(obj)
+					try {
+						return clz.getMethod(returnMethodName, returnClzs).invoke(clz.newInstance(), returnObjs);
+					} catch (Exception e) {
+						return "";
+					}
+				}
+			}
+
+			//包含点 调用其它类中的方法，否则调用本类中的方法
+			if(returnMethodName.indexOf(".") != -1) {	//调用其他类的方法
+
+				//类名
+				String serviceName = returnMethodName.split("\\.")[0].trim();
+				//方法名
+				String methodName = returnMethodName.split("\\.")[1].replace("()","").trim();
+
+				//在方法体中查找类的声明。查找到则该类为方法中的私有变量；否则是其他的类
+				Matcher paramImportClzMatcher = Pattern
+						.compile(".+\\s+" + serviceName + "\\s*(\\(|\\=|\\;|\\))")
+						.matcher(methodBody);
+
+				//当前方法的私有类
+				if(paramImportClzMatcher.find()) {
+					//声明类的字符串
+					String matcherStr = paramImportClzMatcher.group(0).trim();
+					String[] paramClzs = matcherStr.split(returnMethodName.split("\\.")[0].trim())[0].split(" ");
+
+					for(int k=paramClzs.length - 1;k>=0;k--) {
+						if(!"".equals(paramClzs[k])) {
+							// 查找类的import值
+							String paramImportClz = this.getImportClz(clzBody, paramClzs[k]);
+							if(!"".equals(paramImportClz)) {
+								try {
+									//调用方法的返回值类型
+									Class paramClzObj = Class.forName(paramImportClz).getMethod(methodName).getReturnType();
+									return CommonUtil.setDefValue(paramClzObj);
+								} catch (Exception e) {
+									return "";
+								}
+							}
+						}
+					}
+
+				} else{	//调用的是其他的类
+
+					// 获取方法引用的其他的类
+					Map<String,String> publicServices = this.getPublicService(clzBody);
+
+					if(publicServices.containsKey(serviceName)) {
+						try {
+							// 引用类的class
+							Class reClz = Class.forName(publicServices.get(serviceName));
+
+							for(Method method :  reClz.getMethods()) {
+								if(method.getName().equals(methodName)) {
+									// 调用的方法属于BaseService，获取BaseService的泛型实体，并返回值
+									if(method.getDeclaringClass().getName().equals(BaseService.class.getName())) {
+										// BaseService的泛型实体
+										Class methodGenerosity = (Class) ((ParameterizedType)reClz.getGenericSuperclass()).getActualTypeArguments()[1];
+										return CommonUtil.setDefValue(method.getReturnType(), methodGenerosity);
+
+									} else {	// 非BaseServicce中的方法，直接返回方法返回的值
+										return CommonUtil.setDefValue(method.getReturnType());
+									}
+								}
+							}
+						} catch (Exception e) {
+							return "";
+						}
+					}
+				}
+			} else {	//return本类中的方法
+				try {
+					// renturn的方法的名
+					returnMethodName = returnMethodName.replaceAll("this\\.","").replaceAll("super\\.","");
+
+					// 方法的返回值
+					Class reFunctionClz = clz.getMethod(returnMethodName).getReturnType();
+
+					// 本类中的方法返回的是基本类型，直接返回
+					if(!reFunctionClz.getName().equals(Object.class.getName())) {
+						return CommonUtil.setDefValue(reFunctionClz);
+
+					} else {	// 本类中的方法返回的是对象，返回该对象的默认值
+						// 本类中方法的方法体
+						String reMethodBody = this.getMethodBody(clzBody, returnMethodName);
+						// 本类中方法的返回值
+						String reMethodReturn = this.getMethodReturn(reMethodBody);
+
+						// 返回默认值
+						return this.return2Object(clz, clzBody, reMethodBody, reMethodReturn);
+					}
+				} catch (Exception e) {
+					return "";
+				}
+			}
+
+		}
+
+		return "";
+	}
+
 	/**
 	 * 保存成html
 	 * @param html
 	 */
 	public String saveAsHTML(String html) {
-        try { 
+        try {
 			String tempHtml = FileUtil.readFile(this.getClass(), "../html/apiHelper_template.html");
-			
+
 			File file = File.createTempFile("api_doc", ".html");
 			file.deleteOnExit();
-	
-			BufferedWriter output = new BufferedWriter(new FileWriter(file));  
-			output.write(tempHtml.replace("api_doc_html", html.substring(1, html.length() - 1)));  
+
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			output.write(tempHtml.replace("api_doc_html", html.substring(1, html.length() - 1)));
 			output.close();
-	         
+
 	         return file.getAbsolutePath();
-        } catch (Exception e) {  
+        } catch (Exception e) {
         	e.printStackTrace();
         }
-        
+
         return "";
 	}
-	
+
 	/**
 	 * 设置展示参数的html(入参表格)
 	 * @param clz 入参对象类
@@ -657,7 +735,7 @@ public class APIHelper {
 	 * @return html
 	 */
 	private String setParameterHtml(Class clz, String controllerInfo, String parameterName, String paramterFlag, String localIn, boolean isParamNull) {
-		if(clz.getName().indexOf("java.lang") == -1) {
+		if(CommonUtil.isModel(clz)) {
 			String[] clzPathItem = clz.toString().split("class")[1].split("\\.");
 			String projectPath = controllerInfo.split("\\" + File.separator + clzPathItem[0].trim() + File.separator + "\\")[0];
 			String clzPath = projectPath;
@@ -681,7 +759,7 @@ public class APIHelper {
 			return html;
 		}
 	}
-	
+
 	/**
 	 * 处理实体对象
 	 * @param clz 入参对象类
@@ -704,13 +782,14 @@ public class APIHelper {
             code = FileUtil.readFile(clzPath, "UTF8");
         } catch (Exception e) {
         }
-		
+
 		for(Field field : fields) {
 			if("serialVersionUID".equals(field.getName()) || field.toString().indexOf(" static ") != -1 || field.toString().indexOf(" final ") != -1) {
 				continue;
 			}
 
-			if (field.getType().getName().indexOf("java.lang") == -1 && !"int".equals(field.getType().getName()) && !"long".equals(field.getType().getName())) {
+			if (field.getType().getName().indexOf("java.lang") == -1 && field.getType().getName().indexOf("java.util") == -1
+					&& !"int".equals(field.getType().getName()) && !"long".equals(field.getType().getName()) && !"boolean".equals(field.getType().getName())) {
 				html.append(classParameterHtml(field.getType(), "", flag + field.getName() + ".", localIn));
 				continue;
 			}
@@ -740,10 +819,10 @@ public class APIHelper {
             }
             html.append("<td>").append(des).append("</td></tr>");
 		}
-		
+
 		return html.toString();
 	}
-	
+
 	/**
 	 * 获取方法体
 	 * @param html 完整java代码
@@ -752,30 +831,85 @@ public class APIHelper {
 	 */
 	private String getMethodBody(String html, String mehtodName) {
 		//截取方法头
-		Matcher methodBodyMatcher = Pattern.compile("public\\s+Result\\s+"+mehtodName+"\\s*\\(.*\\)").matcher(html);
+		Matcher methodBodyMatcher = Pattern.compile("public\\s+.*\\s+"+mehtodName+"\\s*\\(.*\\)").matcher(html);
 		String methodHead = "";
 		if (methodBodyMatcher.find()) {
 			methodHead = methodBodyMatcher.group(0);
 			html = html.substring(html.indexOf(methodHead));
 		}
-		
+
 		//成对查找花括号，知道花括号数量相等，则表示方法结束
 		int begIndex = html.indexOf("{");
 		int endIndex = html.indexOf("}");
-		
+
 		String tempHtml = html.substring(begIndex + 1, endIndex);
 		int kNum = StringUtil.counter(tempHtml, '{');
 		int bNum = StringUtil.counter(tempHtml, '}');
-		
+
 		while (kNum != bNum) {
 			endIndex = endIndex + 1 + html.substring(endIndex + 1).indexOf("}");
 			tempHtml = html.substring(begIndex + 1, endIndex);
-			
+
 			kNum = StringUtil.counter(tempHtml, '{');
 			bNum = StringUtil.counter(tempHtml, '}');
 		}
-		
+
 		return methodHead + "{" + tempHtml + "}";
+	}
+
+	/**
+	 * 获取方法的return字符串
+	 * @param methodBody 方法体
+	 * @return
+     */
+	private String getMethodReturn(String methodBody) {
+		//截取return
+		String[] returns = methodBody.split("return");
+		String returnStr = returns[returns.length-1].replaceAll("\n", "").trim();
+
+		// return的内容
+		return returnStr.split(";")[0].trim();
+	}
+
+	/**
+	 * 获取import的对象的字符串
+	 * @param clzBody	类的java全部代码
+	 * @param clzName	要查找的类名称
+     * @return	类的完整名称(包名.类名) 没查找到返回""
+     */
+	private String getImportClz(String clzBody, String clzName) {
+		Matcher paramImportMatcher = Pattern.compile("import\\s+.+" + clzName + "\\;").matcher(clzBody);
+		if(paramImportMatcher.find()) {
+			return paramImportMatcher.group(0).replace("import", "").replace(";", "").trim();
+		}
+
+		return "";
+	}
+
+	/**
+	 * 获取当前类的引用的其他类
+	 * @param clzBody	类的java全部代码
+	 * @return	<引用类的自定义名称，引用类的包名.类名>
+     */
+	private Map<String, String> getPublicService(String clzBody) {
+		Matcher publicServiceMatcher = Pattern.compile("public\\s+.*\\s+.*\\s*;").matcher(clzBody);
+
+		Map<String, String> publicServices = new HashMap<>();
+		while (publicServiceMatcher.find()) {
+			String[] service = publicServiceMatcher.group(0).replace(";", "").split(" ");
+
+			String serviceClz = service[1].trim();		//类对象
+			String serviceClzName = service[2].trim();	//类自定义名
+
+			// 查找import的对象的字符串
+			String serviceClzPath = this.getImportClz(clzBody, serviceClz);
+
+			if(!"".equals(serviceClzPath)) {
+				publicServices.put(serviceClzName, serviceClzPath);
+			}
+		}
+
+		return publicServices;
 	}
 	
 }
