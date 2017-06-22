@@ -24,7 +24,7 @@ public class ReturnJson {
 	 * @param request
      */
 	public ReturnJson(HttpServletRequest request) {
-		if(!"get".equalsIgnoreCase(request.getMethod())) {
+		if(null == request || !"get".equalsIgnoreCase(request.getMethod())) {
 			return;
 		}
 
@@ -102,23 +102,6 @@ public class ReturnJson {
 	 */
 	public Object success(Object returnObj) {
 		Result result = setReturnInfo("success", returnObj, null);
-
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			// json模式
-			return result;
-		} else {
-			// jsonp模式
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
-	}
-	
-	/**
-	 * 返回string json
-	 * @param returnStr
-	 * @return
-	 */
-	public Object success(String returnStr) {
-		Result result = setReturnInfo("success", returnStr, null);
 
 		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
 			// json模式
