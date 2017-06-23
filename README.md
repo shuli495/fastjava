@@ -1,18 +1,48 @@
 # fastjava
-java spring mvc 快速开发框架。需要java web项目引用本项目，或将本项目打成jar包导入。
-> 根据数据库生成各个数据表的mybatis mapper、dao、service、controller；并自动生成CURD方法。
-> 根据controller可生成api文档。
+基于java spring mvc、mybatis 的快速开发框架。即插即用，无代码入侵，简化开发流程，帮助developer快速、规范开发。
 
-<br/><br/>
-## 进入fastjava控制台
-引用本项目后，web.xml中添加一下代码，访问localhost/fastjava，进入控制台：
+- 根据controller可生成api文档。
+- 根据数据库生成各个数据表的mybatis mapper、dao、service、controller；并自动生成CURD方法。
+- CUD有hibernate-validator数据校验。
+- mybatis分页查询，查询排序。
+- 异常处理、restful返回值规范、缓存、日志、定时任务......等等功能。
+
+## wiki
+- [wiki](https://github.com/shuli495/fastjava/wiki)
+
+## 使用
+下载源码，您的项目引用本源码。或使用构建工具构建。
+### MAVEN
 ```
-<servlet>
-	<servlet-name>fastJavaView</servlet-name>
-	<servlet-class>com.fastjava.Fastjava</servlet-class>
-</servlet>
-<servlet-mapping>
-	<servlet-name>fastJavaView</servlet-name>
-	<url-pattern>/fastjava/*</url-pattern>
-</servlet-mapping>
+<repositories>
+	<repository>
+		<id>jitpack.io</id>
+		<url>https://jitpack.io</url>
+	</repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+    	<groupId>com.github.shuli495</groupId>
+    	<artifactId>fastjava</artifactId>
+    	<version>0.9.4</version>
+    </dependency>
+</dependencies>
 ```
+### GRADLE
+```
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+
+dependencies {
+        compile 'com.github.shuli495:fastjava:0.9.3'
+}
+```
+- [历史版本](https://github.com/shuli495/fastjava/releases)
+
+## web
+本项目没集成spring及web，仅作为框架需要其他项目引用使用。[fastWebsite](http://note.youdao.com/)是已高度集成fastjava的sringMVC web项目，几乎无需配置。
