@@ -9,10 +9,10 @@ import com.alibaba.fastjson.annotation.JSONField;
  */
 public class Page extends RowBounds {
 
-	private int totalCount;	//总记录数
-	private int totalPage;	//总页数
-	private int pageSize;	//条数
-	private int pageNum;	//页数
+	private int totalCount;	//总记录数 - 查询后返回
+	private int totalPage;	//总页数   - 查询后返回
+	private int pageSize;	//每页条数
+	private int pageNum;	//当前页数
 
 	public Page() {
 		super(0, 0);
