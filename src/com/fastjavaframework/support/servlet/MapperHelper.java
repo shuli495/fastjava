@@ -5,17 +5,27 @@ import com.fastjavaframework.support.util.Db;
 import com.fastjavaframework.util.FileUtil;
 import com.fastjavaframework.util.StringUtil;
 import com.fastjavaframework.util.VerifyUtils;
+import com.sun.org.apache.xerces.internal.dom.DeferredElementImpl;
 import org.springframework.context.ApplicationContext;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 类生成器
@@ -129,6 +139,7 @@ public class MapperHelper {
 
 	private String tableName = "";		//当前操作表
 	private Map<String,Object> column = null;	//当前表的列集合
+	private List<Map<String,Object>> addColumns = new ArrayList<>();	//需要增加的列
 	private String tableJavaName = "";	//当前表java名
 	private String tableClassName = "";	//当前表类名
 	private String tableRemarks = "";	//当前表注释
@@ -148,28 +159,34 @@ public class MapperHelper {
 	private String actionClassName = "";	//action类名
 	private String actionNameSpace = "";	//action命名空间(不包含类名)
 	private String propertiesPath = "";		//校验提示properties路径
-	
+
 	
 	/**
-	 * 生成文件
+	 * 生成文件 或 增加属性
+	 * @param model new生成文件 add增加属性
 	 * @param ctx ApplicationContext
 	 * @param params 前台参数
 	 */
-	public void createFile(ApplicationContext ctx, Map<String,String[]> params) {
+	public void operatorFile(String model, ApplicationContext ctx, Map<String,String[]> params) {
 		//前台选中的表
 		String[] tableChked = params.get("tableChked");
 		if(null == tableChked) {
 			return;
 		}
-		
-		//校验提示properties路径
-		if(params.get("validationMessagesPath").length > 0) {
-			propertiesPath = params.get("validationMessagesPath")[0];
+
+		//默认生成新文件模式
+		if(VerifyUtils.isEmpty(model)) {
+			model = "new";
 		}
-		
+
+		//校验提示properties路径
+		if(null != params.get("validationMessagesPath") && params.get("validationMessagesPath").length > 0) {
+			this.propertiesPath = params.get("validationMessagesPath")[0];
+		}
+
 		DatabaseMetaData databaseMetaData = new Db().getDb(ctx);
 		ResultSet tableRs = new Db().getTables(databaseMetaData);	//表集合
-		
+
 
 		//循环生成选中的表
 		for(String tableInfo : tableChked) {
@@ -187,7 +204,7 @@ public class MapperHelper {
 			if(tableInfos.length > 4) {
 				this.delTimeColumn = tableInfos[4];
 			}
-			
+
 			this.tableName = tableName;	//当前操作的表，必须放在getClumn()前
 			this.column = getClumn(databaseMetaData);
 			this.tableJavaName = toJavaName(tableName);
@@ -216,25 +233,80 @@ public class MapperHelper {
 			if(isNeedCreate(params, "actionNameSpace")) {
 				this.actionNameSpace = params.get("actionNameSpace")[0];
 			}
-			
-			//生成文件
+
+			// 修改文件 获取要添加的列
+			if(model.indexOf("add") != -1) {
+				try {
+					Class bo = Class.forName(boNameSpace + "." + boClassName);
+
+					// 数据库列跟bo中的变量比对 获取要添加的列
+					List<Map<String,String>> columnInfoList = (List<Map<String,String>>)this.column.get("column");
+					for(int j=0; j<columnInfoList.size(); j++) {
+						Map<String,String> columnInfo = columnInfoList.get(j);
+						boolean isExit = false;
+						for(int i=0; i<bo.getDeclaredFields().length; i++) {
+							Field field = bo.getDeclaredFields()[i];
+							if(columnInfo.get("javaName").equals(field.getName())) {
+								isExit = true;
+								break;
+							}
+						}
+						if(!isExit) {
+							Map<String,Object> addColumn = new HashMap<>();
+							addColumn.put("columnIdx", j);	//添加列的序列
+							addColumn.put("column", columnInfo);
+							this.addColumns.add(addColumn);
+						}
+					}
+				} catch (ClassNotFoundException e) {
+					throw new ThrowException("读取实体错误，请重启后再试");
+				}
+			}
+
+			//生成 或 修改文件
 			if(isNeedCreate(params, "mapperPath")) {
-				createMapperXML(params.get("mapperPath")[0] + File.separator + mapperName + ".xml");
+				String filePath = params.get("mapperPath")[0] + File.separator + mapperName + ".xml";
+				if(model.indexOf("new") != -1) {
+					newMapperXML(filePath);
+				} else {
+					addMapperXML(filePath);
+				}
 			}
 			if(isNeedCreate(params, "boPath")) {
-				createBo(params.get("boPath")[0] + File.separator + boClassName + ".java");
+				String filePath = params.get("boPath")[0] + File.separator + boClassName + ".java";
+				if(model.indexOf("new") != -1) {
+					newBo(filePath);
+				} else {
+					addBo(filePath);
+				}
 			}
 			if(isNeedCreate(params, "voPath")) {
-				createVo(params.get("voPath")[0] + File.separator + voClassName + ".java");
+				if(model.indexOf("new") != -1) {
+					String filePath = params.get("voPath")[0] + File.separator + voClassName + ".java";
+					newVo(filePath);
+				}
 			}
 			if(isNeedCreate(params, "daoPath")) {
-				createDao(params.get("daoPath")[0] + File.separator + daoClassName + ".java");
+				if(model.indexOf("new") != -1) {
+					String filePath = params.get("daoPath")[0] + File.separator + daoClassName + ".java";
+					newDao(filePath);
+				}
 			}
 			if(isNeedCreate(params, "servicePath")) {
-				createService(params.get("servicePath")[0] + File.separator + serviceClassName + ".java");
+				String filePath = params.get("servicePath")[0] + File.separator + serviceClassName + ".java";
+				if(model.indexOf("new") != -1) {
+					newService(filePath);
+				} else {
+					addService(filePath);
+				}
 			}
 			if(isNeedCreate(params, "actionPath")) {
-				createAction(params.get("actionPath")[0] + File.separator + actionClassName + ".java");
+				String filePath = params.get("actionPath")[0] + File.separator + actionClassName + ".java";
+				if(model.indexOf("new") != -1) {
+					newControl(filePath);
+				} else {
+					addControl(filePath);
+				}
 			}
 		}
 	}
@@ -243,7 +315,7 @@ public class MapperHelper {
 	 * 创建mapperXML
 	 * @param path 生成路径
 	 */
-	private void createMapperXML(String path) {
+	private void newMapperXML(String path) {
 		List<Map<String,String>> tableColumnList = columnList();
 
 		StringBuffer resultBOMap = new StringBuffer();			//BO映射关系
@@ -301,11 +373,11 @@ public class MapperHelper {
 				
 				//selectByOr
 				selectByOr.append("\t\t\t<if test=\"").append(javaName).append(" != null\">\n")
-						  .append("\t\t\t\tor ").append(dbName).append("=#{" + javaName + "}\n")
+						  .append("\t\t\t\tOR ").append(dbName).append("=#{" + javaName + "}\n")
 						  .append("\t\t\t</if>\n");
 				//selectByAnd
 				selectByAnd.append("\t\t\t<if test=\"").append(javaName).append(" != null\">\n")
-						   .append("\t\t\t\tand ").append(dbName).append("=#{" + javaName + "}\n")
+						   .append("\t\t\t\tAND ").append(dbName).append("=#{" + javaName + "}\n")
 						   .append("\t\t\t</if>\n");
 
 				resultBOMap.append("\t\t<result column=\"").append(dbName).append("\" property=\"").append(javaName).append("\" />\n");
@@ -434,7 +506,7 @@ public class MapperHelper {
 	 * 创建bo层
 	 * @param path 生成路径
 	 */
-	private void createBo(String path) {
+	private void newBo(String path) {
 		StringBuffer attribute = new StringBuffer();
 		StringBuffer getAndSet = new StringBuffer();
 		StringBuffer importPack = new StringBuffer();
@@ -443,39 +515,14 @@ public class MapperHelper {
 
 		//遍历当前表的列
 		for(Map<String,String> columnMap : tableColumnList) {
-			String name = columnJavaName(columnMap);	//当前列驼峰格式名
-			String type = columnType(columnMap);		//当前列数据类型
-			String remarks = columnRemarks(columnMap);	//当前列注释
-			Map<String, String> annotation = columnAnnotation(tableName, columnMap);	//当前列注解
-
 			//导入包
-			if("Date".equals(type) && importPack.toString().indexOf("java.util.Date") == -1) {
-				importPack.append("import java.util.Date;\n");
-			}
-			if("BigDecimal".equals(type) && importPack.toString().indexOf("java.math.BigDecimal") == -1) {
-				importPack.append("import java.math.BigDecimal;\n");
-			}
-			if(null != annotation.get("imports")) {
-				for(String importName : annotation.get("imports").split(";")) {
-					if(importPack.indexOf(importName) == -1) {
-						importPack.append(importName).append(";\n");
-					}
-				}
-			}
+			this.getBoImport(columnMap, importPack);
 
 			//属性
-			String annotations = annotation.get("annotations");
-			attribute.append(null == annotations ? "" : annotations)
-					.append("\tprivate ").append(type).append(" ").append(name).append(";\t").append(remarks).append("\n\n");
+			this.getBoAttribute(columnMap, attribute);
 
 			//get、set方法
-			getAndSet.append("\tpublic ").append(type).append(" get").append(toClassName(name)).append("() {\n")
-					.append("\t\treturn ").append(name).append(";\n")
-					.append("\t}\n\n")
-					.append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
-					.append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
-					.append("\t\treturn this;\n")
-					.append("\t}\n\n");
+			this.getBoGetAndSet(columnMap, getAndSet);
 		}
 
 		//表注释信息
@@ -502,10 +549,69 @@ public class MapperHelper {
 	}
 
 	/**
+	 * 获取bo导入包
+	 * @param columnMap
+	 * @param importPack
+	 */
+	private void getBoImport(Map<String,String> columnMap, StringBuffer importPack) {
+		String type = columnType(columnMap);		//当前列数据类型
+		Map<String, String> annotation = columnAnnotation(tableName, columnMap);	//当前列注解
+
+		//导入包
+		if("Date".equals(type) && importPack.toString().indexOf("java.util.Date") == -1) {
+			importPack.append("import java.util.Date;\n");
+		}
+		if("BigDecimal".equals(type) && importPack.toString().indexOf("java.math.BigDecimal") == -1) {
+			importPack.append("import java.math.BigDecimal;\n");
+		}
+		if(null != annotation.get("imports")) {
+			for(String importName : annotation.get("imports").split(";")) {
+				if(importPack.indexOf(importName) == -1) {
+					importPack.append(importName).append(";\n");
+				}
+			}
+		}
+	}
+
+	/**
+	 * 获取bo 成员变量
+	 * @param columnMap
+	 * @param attribute
+	 */
+	private void getBoAttribute(Map<String,String> columnMap, StringBuffer attribute) {
+		String name = columnJavaName(columnMap);	//当前列驼峰格式名
+		String type = columnType(columnMap);		//当前列数据类型
+		String remarks = columnRemarks(columnMap);	//当前列注释
+		Map<String, String> annotation = columnAnnotation(tableName, columnMap);	//当前列注解
+
+		String annotations = annotation.get("annotations");
+		attribute.append(null == annotations ? "" : annotations)
+				.append("\tprivate ").append(type).append(" ").append(name).append(";\t").append(remarks).append("\n\n");
+	}
+
+	/**
+	 * 获取bo get set
+	 * @param columnMap
+	 * @param getAndSet
+	 */
+	private void getBoGetAndSet(Map<String,String> columnMap, StringBuffer getAndSet) {
+		String name = columnJavaName(columnMap);	//当前列驼峰格式名
+		String type = columnType(columnMap);		//当前列数据类型
+
+		getAndSet.append("\tpublic ").append(type).append(" get").append(toClassName(name)).append("() {\n")
+				.append("\t\treturn ").append(name).append(";\n")
+				.append("\t}\n\n")
+				.append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
+				.append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
+				.append("\t\treturn this;\n")
+				.append("\t}\n\n");
+	}
+
+	/**
 	 * 创建vo层
 	 * @param path 生成路径
 	 */
-	private void createVo(String path) {
+	private void newVo(String path) {
 		StringBuffer code = new StringBuffer();
 		code.append("package ").append(voNameSpace).append(";\n\n")
 			.append("import ").append(boNameSpace).append(".").append(boClassName).append(";\n\n")
@@ -521,7 +627,7 @@ public class MapperHelper {
 	 * 创建dao层
 	 * @param path 生成路径
 	 */
-	private void createDao(String path) {
+	private void newDao(String path) {
 		StringBuffer code = new StringBuffer();
 		
 		//表注释信息
@@ -549,37 +655,15 @@ public class MapperHelper {
 	 * 创建service层
 	 * @param path 生成路径
 	 */
-	private void createService(String path) {
+	private void newService(String path) {
 		StringBuffer code = new StringBuffer();
 
 		List<Map<String,String>> tableColumnList = columnList();
-		
+
 		//遍历当前表的列
 		StringBuffer upColumn = new StringBuffer();
 		for(Map<String,String> columnMap : tableColumnList) {
-			String name = toClassName(columnJavaName(columnMap));	//当前列明
-			String remarks = columnRemarks(columnMap);	//当前列注释
-			String type = columnType(columnMap);	//当前列数据类型
-
-			//不设置修改时间
-			if(name.toLowerCase().equals(updateTimeColumn.toLowerCase())) {
-				continue;
-			}
-
-			//添加备注
-			if(!"".equals(remarks)) {
-				upColumn.append("\t\t").append(remarks).append("\n");
-			}
-
-
-			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
-			if("long".equals(type) || "float".equals(type) || "double".equals(type)) {
-				upColumn.append("\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n");
-			} else {
-				upColumn.append("\t\tif(null != upVO.get").append(name).append("()) {\n")
-						.append("\t\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n")
-						.append("\t\t}\n");
-			}
+			this.setUpColumn(columnMap, upColumn);
 		}
 
 		//修改时间
@@ -658,10 +742,42 @@ public class MapperHelper {
 	}
 
 	/**
+	 * 设置update修改的属性
+	 * @param columnMap
+	 * @param upColumn
+     * @return
+     */
+	private void setUpColumn(Map<String,String> columnMap, StringBuffer upColumn) {
+		String name = toClassName(columnJavaName(columnMap));	//当前列明
+		String remarks = columnRemarks(columnMap);	//当前列注释
+		String type = columnType(columnMap);	//当前列数据类型
+
+		//不设置修改时间
+		if(name.toLowerCase().equals(updateTimeColumn.toLowerCase())) {
+			return;
+		}
+
+		//添加备注
+		if(!"".equals(remarks)) {
+			upColumn.append("\t\t").append(remarks).append("\n");
+		}
+
+
+		//不能为null类型 不判断 直接设置值, 否则先判断是否为null
+		if("long".equals(type) || "float".equals(type) || "double".equals(type)) {
+			upColumn.append("\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n");
+		} else {
+			upColumn.append("\t\tif(null != upVO.get").append(name).append("()) {\n")
+					.append("\t\t\tdbVO.set").append(name).append("(upVO.get").append(name).append("());\n")
+					.append("\t\t}\n");
+		}
+	}
+
+	/**
 	 * 创建action层
 	 * @param path 生成路径
 	 */
-	private void createAction(String path) {
+	private void newControl(String path) {
 		StringBuffer code = new StringBuffer();
 		
 		String importDate = "";
@@ -791,55 +907,18 @@ public class MapperHelper {
 
 		queryCondition.append("@RequestParam(required = false) Integer pageSize, ")
 				      .append("@RequestParam(required = false) Integer pageNum,\n")
-					  .append("\t\t\t\t\t\t@RequestParam(required = false) String sort, ")
-					  .append("@RequestParam(required = false) String order");
+					  .append("\t\t\t\t\t\t@RequestParam(required = false) String orderBy, ")
+					  .append("@RequestParam(required = false) String orderSort");
 
+		//设置controller query方法参数
 		int nIndex = 1;	//参数换行序列
 		for(int i=0; i<tableColumnList.size(); i++) {
 			Map<String,String> columnMap = tableColumnList.get(i);
+			nIndex = this.setQueryParam(columnMap, nIndex, queryCondition, queryConditionSet);
 
-			String columName = columnJavaName(columnMap);	//当前列明
-			String columRemarks = columnRemarks(columnMap);	//当前列注释
-			String columType = columnType(columnMap);	//当前列数据类型
-
-			//跳过主键
-			if(columnJavaPrimary().toLowerCase().equals(columName.toLowerCase())) {
-				continue;
+			if(!"".equals(queryCondition.toString()) && "".equals(importRequestParam.toString())) {
+				importRequestParam.append("import org.springframework.web.bind.annotation.RequestParam;\n");
 			}
-			
-			//不能为null类型 不判断 直接设置值, 否则先判断是否为null
-			if(!"long".equals(columType) && !"float".equals(columType) && !"double".equals(columType) && !"Date".equals(columType)) {
-				//参数逗号
-				if(i != tableColumnList.size() - 1) {
-					queryCondition.append(",");
-				}
-
-				//参数换行
-				if(nIndex%2 == 1) {	//2个换行
-					queryCondition.append("\n\t\t\t\t\t\t");
-				} else {
-					queryCondition.append(" ");
-				}
-				nIndex++;
-
-				queryCondition.append("@RequestParam(required = false) ").append(columType).append(" ").append(columName);
-
-
-				//添加备注
-				if(!"".equals(columRemarks)) {
-					queryConditionSet.append("\t\t").append(columRemarks).append("\n");
-				}
-				
-				//set参数
-				queryConditionSet.append("\t\tif(null != ").append(columName).append(") {\n")
-							.append("\t\t\tvo.set").append(toClassName(columName)).append("(").append(columName).append(");\n")
-							.append("\t\t}\n");
-				
-				if("".equals(importRequestParam.toString())) {
-					importRequestParam.append("import org.springframework.web.bind.annotation.RequestParam;\n");
-				}
-			}
-		
 		}
 		
 		//表注释信息
@@ -957,7 +1036,14 @@ public class MapperHelper {
 			.append("\tpublic Object query(").append(queryCondition).append(") {\n")
 			.append("\t\t").append(voClassName).append(" vo = new ").append(voClassName).append("();\n")
 			.append(queryConditionSet).append("\n")
-			.append("\t\tif(pageSize != null && pageNum != null && pageSize != 0 && pageNum != 0) {	//分页查询\n")
+			.append("\t\t//排序\n")
+			.append("\t\tif(null != orderBy) {\n")
+			.append("\t\t\tvo.setOrderBy(orderBy);\n")
+			.append("\t\t}\n")
+			.append("\t\tif(null != orderSort) {\n")
+			.append("\t\t\tvo.setOrderSort(orderSort);\n")
+			.append("\t\t}\n\n")
+			.append("\t\tif(null != pageSize && null != pageNum && pageSize != 0 && pageNum != 0) {	//分页查询\n")
 			.append("\t\t\tPage page = new Page();\n")
 			.append("\t\t\tpage.setPageSize(pageSize);\n")
 			.append("\t\t\tpage.setPageNum(pageNum);\n")
@@ -970,9 +1056,522 @@ public class MapperHelper {
 			
 			.append("}");
 
-		//生成文件
+		//生成类文件
 		FileUtil.writeFile(code.toString(), new File(path));
 	}
+
+	/**
+	 * 设置controller query方法参数
+	 * @param columnMap
+	 * @param nIndex			参数序列 用户换行
+	 * @param queryCondition	保存参数的字符串
+	 * @param queryConditionSet 保存set参数的字符串
+     * @return nIndex
+     */
+	private int setQueryParam(Map<String,String> columnMap,
+							   int nIndex, StringBuffer queryCondition,
+							   StringBuffer queryConditionSet) {
+
+		String columName = columnJavaName(columnMap);	//当前列明
+		String columRemarks = columnRemarks(columnMap);	//当前列注释
+		String columType = columnType(columnMap);	//当前列数据类型
+
+		//跳过主键
+		if(columnJavaPrimary().toLowerCase().equals(columName.toLowerCase())) {
+			return nIndex;
+		}
+
+		//不能为null类型 不判断 直接设置值, 否则先判断是否为null
+		if(!"long".equals(columType) && !"float".equals(columType) && !"double".equals(columType) && !"Date".equals(columType)) {
+			//参数逗号
+			queryCondition.append(",");
+
+			//参数换行
+			if(nIndex%2 == 1) {	//2个换行
+				queryCondition.append("\n\t\t\t\t\t\t");
+			} else {
+				queryCondition.append(" ");
+			}
+			nIndex++;
+
+			queryCondition.append("@RequestParam(required = false) ").append(columType).append(" ").append(columName);
+
+
+			//添加备注
+			if(!"".equals(columRemarks)) {
+				queryConditionSet.append("\t\t").append(columRemarks).append("\n");
+			}
+
+			//set参数
+			queryConditionSet.append("\t\tif(null != ").append(columName).append(") {\n")
+					.append("\t\t\tvo.set").append(toClassName(columName)).append("(").append(columName).append(");\n")
+					.append("\t\t}\n");
+		}
+
+		return nIndex;
+	}
+
+	/**
+	 * 要入插入节点的上个节点
+	 * dom获取节点含有#text，用此方法过滤
+	 * @param nodeList 节点列表
+	 * @param idx	要插入节点的序列位置
+     * @return
+     */
+	private Node getItemNodeByIdx(NodeList nodeList, int idx) {
+		int realIdx = -1;
+		Node lineFirstNode = null;
+		for(int i=0; i<nodeList.getLength(); i++) {
+			Node itemNode = nodeList.item(i);
+			if("id".equals(itemNode.getNodeName()) || "result".equals(itemNode.getNodeName())) {
+				realIdx++;
+
+				if(realIdx == idx) {
+					return lineFirstNode==null?nodeList.item(i):lineFirstNode;
+				}
+			} else {
+				lineFirstNode = itemNode;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * 增加模式 修改xml
+	 * @param path
+     */
+	private void addMapperXML(String path) {
+		DocumentBuilderFactory factory  = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
+
+		// 获取文件
+		try {
+			File file = new File(path);
+
+			// 文件不存在新建
+			if(!file.exists()) {
+				newMapperXML(path);
+				return;
+			}
+
+			Document document = builder.parse(file);
+
+			for(Map<String, Object> column : this.addColumns) {
+				int columnIdx = (int)column.get("columnIdx");	//增加列的位置
+
+				Map<String, String> columnInfo = (Map<String, String>)column.get("column");	//增加列的信息
+
+				String thisColumnDbName = this.columnDbName(columnInfo);
+				String thisColumnJavaName = this.columnJavaName(columnInfo);
+
+				NodeList itemNodeList = document.getChildNodes().item(1).getChildNodes();
+				for(int i=0; i<itemNodeList.getLength(); i++) {
+					Node itemNode = itemNodeList.item(i);
+
+					// 解析各个几点
+					// resultMap id是BO的节点
+					if("resultMap".equals(itemNode.getNodeName()) && ((DeferredElementImpl) itemNode).getAttribute("id").endsWith("BO")) {
+
+						// 过滤已添加项
+						NodeList results = ((DeferredElementImpl) itemNode).getElementsByTagName("result");
+						boolean isAdd = false;
+						for(int j=0; j<results.getLength(); j++){
+							if(thisColumnDbName.equals(results.item(j).getAttributes().getNamedItem("column").getNodeValue())) {
+								isAdd = true;
+								break;
+							}
+						}
+						if(isAdd) {
+							continue;
+						}
+
+						// 新节点
+						Element newResultNode = document.createElement("result");
+						newResultNode.setAttribute("column", thisColumnDbName);
+						newResultNode.setAttribute("property", thisColumnJavaName);
+
+						// 子节点个数(id+result)
+						int realItemSum = ((DeferredElementImpl) itemNode).getElementsByTagName("id").getLength() +
+								results.getLength();
+
+						// 结尾插入
+						if(columnIdx >= realItemSum) {
+							itemNode.appendChild(document.createTextNode("\t"));
+							itemNode.appendChild(newResultNode);
+							itemNode.appendChild(document.createTextNode("\n"));
+							itemNode.appendChild(document.createTextNode("\t"));
+						} else {	//按顺序插入
+							//要入插入节点的上个节点
+							Node nowNode = this.getItemNodeByIdx(itemNode.getChildNodes(), columnIdx);
+							itemNode.insertBefore(newResultNode, nowNode);
+						}
+
+					}
+				}
+			}
+
+
+			//设置xml
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			transformerFactory.setAttribute("indent-number", new Integer(4));	// 缩进已4个空格为看为
+
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty("encoding", "UTF-8");
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");	//自动缩进
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "-//mybatis.org//DTD Mapper 3.0//EN");
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "http://mybatis.org/dtd/mybatis-3-mapper.dtd");
+
+			StringWriter writer = new StringWriter();
+			transformer.transform(new DOMSource(document), new StreamResult(writer));
+			String code = writer.toString();
+
+			//用字符串模式设置xml
+			// insert
+			Matcher insertMatcher = Pattern.compile("<insert[\\s\\S]*?</insert>").matcher(code);
+			while (insertMatcher.find()) {
+				String insertCode = insertMatcher.group(0);
+
+				// 列
+				String newColumnStr = this.setSql(insertCode, "column");
+
+				// value
+				newColumnStr = this.setSql(newColumnStr, "value");
+				code = code.replace(insertCode, newColumnStr);
+			}
+
+			// select
+			Matcher selectMatcher = Pattern.compile("<select[\\s\\S]*?</select>").matcher(code);
+			while (selectMatcher.find()) {
+				String selectCode = selectMatcher.group(0);
+
+				// 列
+				String newColumnStr = this.setSql(selectCode, "column");
+				code = code.replace(selectCode, newColumnStr);
+			}
+
+			// update
+			Matcher updateMatcher = Pattern.compile("<update[\\s\\S]*?</update>").matcher(code);
+			while (updateMatcher.find()) {
+				String updateCode = updateMatcher.group(0);
+
+				// 列
+				String newColumnStr = this.setSql(updateCode, "column");
+				code = code.replace(updateCode, newColumnStr);
+			}
+
+			FileUtil.writeFile(code, new File(path));
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (TransformerConfigurationException e) {
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 设置sql
+	 * @param domContent xml节点内容
+	 * @param type	column设置列 value设置值
+	 * @return
+     */
+	private String setSql(String domContent, String type) {
+		String regex = type.equals("column")?"(\\s+|\r|\t|\n).*(\\s+|\r|\t|\n)((?i)VALUES|(?i)FROM)":
+				"((?i)VALUES<|(?i)VALUES)[\\s\\S]*?(></insert>|</insert>)";
+		Matcher columnMatcher = Pattern.compile(regex).matcher(domContent);
+
+		if (columnMatcher.find()) {
+			String columnStr = columnMatcher.group(0);
+			if(type.equals("column")) {
+				columnStr = columnStr.replaceAll("(\\s|\r|\t|\n)", "")
+							.replaceAll("(?i)VALUES","")
+							.replaceAll("(?i)FROM","")
+							.replaceAll("\\(","")
+							.replaceAll("\\)","");
+			} else {
+				columnStr = columnStr.replaceAll("(\\s|\r|\t|\n)", "")
+							.replaceAll("<[\\s\\S]*?>","")
+							.replaceAll("(?i)VALUES","")
+							.replaceAll("</insert>","")
+							.replaceAll("\\(","")
+							.replaceAll("\\)","");
+			}
+
+			// 当前列或值集合
+			List<String> columnStrs =  new ArrayList(Arrays.asList(columnStr.split(",")));
+			// 最新列或值的集合
+			String[] newColumnStrs = new String[columnStrs.size()+this.addColumns.size()];
+
+			// 增加新列或值
+			Iterator<Map<String, Object>> addColsIter = this.addColumns.iterator();
+			while(addColsIter.hasNext()) {
+				Map<String, Object> column = addColsIter.next();
+				int columnIdx = (int) column.get("columnIdx");    //增加列的位置
+				Map<String, String> columnInfo = (Map<String, String>) column.get("column");    //增加列的信息
+
+				if(columnStrs.lastIndexOf(this.columnDbName(columnInfo)) != -1) {
+					addColsIter.remove();
+					continue;
+				}
+
+				if(type.equals("value")) {
+					// 有些value以#{XXX.YYY}格式存在，以此格式更新
+					Matcher valueMatcher = Pattern.compile("(\\{|\\.).*\\}").matcher(columnStrs.get(0));
+					if(valueMatcher.find()) {
+						String key = valueMatcher.group(0).replaceAll("(\\{.*\\.|\\{)","").replace("}","");
+						newColumnStrs[columnIdx] = columnStrs.get(0).replace(key, this.columnJavaName(columnInfo));
+					}
+				} else {
+					newColumnStrs[columnIdx] = this.columnDbName(columnInfo);
+				}
+			}
+
+			// 回填老列或值
+			for(int i=newColumnStrs.length-1; i>=0; i--) {
+				if(VerifyUtils.isEmpty(newColumnStrs[i])) {
+					int columnStrsBefSize = columnStrs.size()-1;
+					if(columnStrsBefSize >= 0) {
+						newColumnStrs[i] = columnStrs.get(columnStrsBefSize);
+						columnStrs.remove(columnStrsBefSize);
+					}
+				}
+			}
+
+			StringJoiner joiner = new StringJoiner(",");
+			for (CharSequence cs: newColumnStrs) {
+				if(null != cs) {
+					joiner.add(cs);
+				}
+			}
+			domContent = domContent.replace(columnStr, joiner.toString());
+		}
+
+
+		// 最新列的where条件或update值
+		StringBuffer whereOrUpdateStr = new StringBuffer();
+		for(Map<String, Object> column : this.addColumns) {
+			Map<String, String> columnInfo = (Map<String, String>) column.get("column");    //增加列的信息
+
+			whereOrUpdateStr.append("\t<if test=\"").append(this.columnJavaName(columnInfo)).append(" != null\">\n\t\t\t\t");
+			if(domContent.startsWith("<update")) {
+				if(domContent.indexOf("<foreach") != -1) {
+					whereOrUpdateStr.append("\t");
+				}
+				whereOrUpdateStr.append(this.columnDbName(columnInfo))
+						.append("=#{").append(this.columnJavaName(columnInfo)).append("},")
+						.append("\n\t\t\t");
+				if(domContent.indexOf("<foreach") != -1) {
+					whereOrUpdateStr.append("\t");
+				}
+				whereOrUpdateStr.append("</if>\n\t\t");
+				if(domContent.indexOf("<foreach") != -1) {
+					whereOrUpdateStr.append("\t");
+				}
+			} else if(domContent.startsWith("<select")) {
+				String operatorStr = "OR ";
+				if(domContent.indexOf("AND ") != -1) {
+					operatorStr = "AND ";
+				}
+				whereOrUpdateStr.append(operatorStr).append(this.columnDbName(columnInfo))
+						.append("=#{").append(this.columnJavaName(columnInfo)).append("}")
+						.append("\n\t\t\t</if>\n\t\t");
+			}
+		}
+
+		if(domContent.startsWith("<update")) {
+			int trimIdx = domContent.lastIndexOf("</trim>");
+			domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+		} else if(domContent.startsWith("<select")
+				&& (domContent.indexOf("id=\"findById\"") == -1 || domContent.indexOf("parameterType=\"string\"") == -1)) {
+			int trimIdx = domContent.lastIndexOf("</where>");
+			domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+		}
+
+		return domContent;
+	}
+
+	/**
+	 * 增加模式 修改bo
+	 * @param path
+     */
+	private void addBo(String path) {
+		//源代码
+		String code = FileUtil.readFile(path, "UTF-8");
+
+		//文件不存在则新建
+		if(VerifyUtils.isEmpty(code)) {
+			newBo(path);
+			return;
+		}
+
+		StringBuffer attribute = new StringBuffer();
+		StringBuffer getAndSet = new StringBuffer();
+		StringBuffer importPack = new StringBuffer();
+
+		for(Map<String, Object> column : this.addColumns) {
+			Map<String, String> columnInfo = (Map<String, String>)column.get("column");	//增加列的信息
+
+			//导入包
+			this.getBoImport(columnInfo, importPack);
+
+			//属性
+			this.getBoAttribute(columnInfo, attribute);
+
+			//get、set方法
+			this.getBoGetAndSet(columnInfo, getAndSet);
+		}
+
+		int classHeadIdx = code.lastIndexOf("public class");
+		String variableStr = code.substring(code.lastIndexOf("private ")).split("\n")[0];
+		int variableIdx = code.lastIndexOf(variableStr) + variableStr.length();
+		int getSetIdx = code.lastIndexOf("}");
+
+		StringBuffer bufferCode = new StringBuffer(code);
+
+		//get、set方法
+		bufferCode.insert(getSetIdx - 1, getAndSet);
+
+		//属性
+		bufferCode.insert(variableIdx, "\n\n" + attribute);
+
+		//导入包
+		if(bufferCode.indexOf(importPack.toString()) == -1) {
+			importPack.append("\n");
+			bufferCode.insert(classHeadIdx, importPack);
+		}
+
+		//生成类文件
+		FileUtil.writeFile(bufferCode.toString().replace("\n\n\n\n","\n\n").replace("\n\n\n}","\n\n}"), new File(path));
+	}
+
+	/**
+	 * 增加模式 修改service
+	 * @param path
+     */
+	private void addService(String path) {
+		//源代码
+		String code = FileUtil.readFile(path, "UTF-8");
+
+		//文件不存在则新建
+		if(VerifyUtils.isEmpty(code)) {
+			newService(path);
+			return;
+		}
+
+		//设置update修改的属性
+		StringBuffer upColumn = new StringBuffer();
+		for(Map<String, Object> column : this.addColumns) {
+			Map<String, String> columnInfo = (Map<String, String>)column.get("column");	//增加列的信息
+			this.setUpColumn(columnInfo, upColumn);
+		}
+
+		//修改时间
+		if(!"".equals(updateTimeColumn)) {
+			upColumn.append("\n\t\t//修改时间\n")
+					.append("\t\tdbBO.set").append(toClassName(updateTimeColumn)).append("(new Date());\n\n");
+
+			// 设置date import
+			if(code.indexOf("import java.util.Date;") == -1) {
+				String importDate = "import java.util.Date;\n";
+
+				int importIdx = code.indexOf("import ");
+				code = new StringBuffer(code).insert(importIdx, importDate).toString();
+			}
+		}
+
+		String regex = "(private ).*( setUpdateVlaue\\()";
+		Matcher functionMatcher = Pattern.compile(regex).matcher(code);
+
+		if (functionMatcher.find()) {
+			String fnctionStr = functionMatcher.group(0);
+
+			int functionIdx = code.indexOf(fnctionStr);
+			int returnIdx = code.indexOf("return ", functionIdx);
+
+			if(upColumn.toString().startsWith("\t\t")) {
+				upColumn.replace(0, 2, "");
+			}
+
+			code = new StringBuffer(code).insert(returnIdx, upColumn + "\t\t").toString();
+		}
+
+		//生成类文件
+		FileUtil.writeFile(code, new File(path));
+	}
+
+	/**
+	 * 增加模式 修改control
+	 * @param path
+     */
+	private void addControl(String path) {
+		//源代码
+		String code = FileUtil.readFile(path, "UTF-8");
+
+		//文件不存在则新建
+		if(VerifyUtils.isEmpty(code)) {
+			newControl(path);
+			return;
+		}
+
+
+		int paramIdx = 0;	//插入参数的位置
+		int commaSum = 0;	//入参分隔符“,”的个数，用户计算新增参数换行
+
+		//查找入参位置，分隔符个数
+		String regex = "(public ).*( query\\()";
+		Matcher functionMatcher = Pattern.compile(regex).matcher(code);
+		if (functionMatcher.find()) {
+			String fnctionStr = functionMatcher.group(0);
+			int functionIdx = code.indexOf(fnctionStr);
+			int funBodyBegIdx = code.indexOf("{", functionIdx);
+			paramIdx = code.substring(0, funBodyBegIdx).lastIndexOf(")");
+
+			commaSum = fnctionStr.split(",").length;
+		}
+
+		//设置新增列的入参、setValue、import
+		StringBuffer queryCondition = new StringBuffer();
+		StringBuffer queryConditionSet = new StringBuffer();
+		StringBuffer importRequestParam = new StringBuffer();
+		String importStr = "import org.springframework.web.bind.annotation.RequestParam;\n";
+
+		for(Map<String, Object> column : this.addColumns) {
+			Map<String, String> columnInfo = (Map<String, String>)column.get("column");	//增加列的信息
+			commaSum = this.setQueryParam(columnInfo, commaSum, queryCondition, queryConditionSet);
+
+			if(!"".equals(queryCondition.toString()) && "".equals(importRequestParam.toString()) && code.indexOf(importStr) == -1) {
+				importRequestParam.append(importStr);
+			}
+		}
+
+		//增加import
+		if(!"".equals(importRequestParam.toString())) {
+			int importIdx = code.indexOf("import ");
+			code = new StringBuffer(code).insert(importIdx, importRequestParam.toString()).toString();
+		}
+
+		//增加入参
+		if(paramIdx != 0) {
+			code = new StringBuffer(code).insert(paramIdx, queryCondition).toString();
+		}
+
+		//增加setValue
+		int voIdx = code.indexOf(" vo", paramIdx);
+		int setIdx = code.indexOf("\n\n", voIdx);
+		code = new StringBuffer(code).insert(setIdx, "\n" + queryConditionSet).toString();
+
+		//生成类文件
+		FileUtil.writeFile(code, new File(path));
+	}
+
 	
 	/**
 	 * 数据库名转java名(驼峰命名)

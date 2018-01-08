@@ -645,7 +645,7 @@ public class APIHelper {
 				} else{	//调用的是其他的类
 
 					// 获取方法引用的其他的类
-					Map<String,String> publicServices = this.getPublicService(clzBody);
+					Map<String,String> publicServices = this.getPublicVariable(clzBody);
 
 					if(publicServices.containsKey(serviceName)) {
 						try {
@@ -891,7 +891,7 @@ public class APIHelper {
 	 * @param clzBody	类的java全部代码
 	 * @return	<引用类的自定义名称，引用类的包名.类名>
      */
-	private Map<String, String> getPublicService(String clzBody) {
+	public Map<String, String> getPublicVariable(String clzBody) {
 		Matcher publicServiceMatcher = Pattern.compile("public\\s+.*\\s+.*\\s*;").matcher(clzBody);
 
 		Map<String, String> publicServices = new HashMap<>();

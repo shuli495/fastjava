@@ -2,10 +2,7 @@ package com.fastjavaframework;
 
 import com.fastjavaframework.exception.ThrowException;
 import com.fastjavaframework.support.html.*;
-import com.fastjavaframework.support.servlet.APIHelper;
-import com.fastjavaframework.support.servlet.CacheHelper;
-import com.fastjavaframework.support.servlet.LogHelper;
-import com.fastjavaframework.support.servlet.ModuleHelper;
+import com.fastjavaframework.support.servlet.*;
 import com.fastjavaframework.util.VerifyUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -56,15 +53,15 @@ public class Fastjava extends HttpServlet {
 			subHTML = new MapperHelperHtml().html();
 			
 			if("mapperHelper_readPath".equals(methodType)) {	//读取路径
-				replaceMap.putAll(new com.fastjavaframework.support.servlet.MapperHelper().readPath(req.getParameter("projectPath")));
+				replaceMap.putAll(new MapperHelper().readPath(req.getParameter("projectPath")));
 			} else if("mapperHelper_createFile".equals(methodType)) {	//生成文件
-				new com.fastjavaframework.support.servlet.MapperHelper().createFile(ctx, req.getParameterMap());
+				new MapperHelper().operatorFile(req.getParameter("model"), ctx, req.getParameterMap());
 				returnJs.append("alert('生成成功，请刷新项目！');");
 			}
 
 			//读取表信息
 			if(null == req.getParameter("tableInfos")) {
-				replaceMap.putAll(new com.fastjavaframework.support.servlet.MapperHelper().makeTableInfo(ctx));
+				replaceMap.putAll(new MapperHelper().makeTableInfo(ctx));
 			}
 		} else if(methodType.startsWith("moduleHelper")) {	//模块管理
 			ModuleHelper moduleHelper = new ModuleHelper();

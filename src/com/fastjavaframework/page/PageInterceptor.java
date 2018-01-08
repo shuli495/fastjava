@@ -81,10 +81,10 @@ public class PageInterceptor implements Interceptor {
         Object parameterObject = boundSql.getParameterObject();
     	if(null != parameterObject && BaseBean.class.isAssignableFrom(parameterObject.getClass())) {
             // 设置排序信息
-        	Object order = metaStatementHandler.getValue("delegate.boundSql.parameterObject.order");
-        	if(!VerifyUtils.isEmpty(order)) {
-            	String sort = (String)metaStatementHandler.getValue("delegate.boundSql.parameterObject.sort");
-        		sql.append(" ORDER BY ").append(order.toString()).append(" ").append(sort);
+        	Object orderBy = metaStatementHandler.getValue("delegate.boundSql.parameterObject.orderBy");
+        	if(!VerifyUtils.isEmpty(orderBy)) {
+            	String orderSort = (String)metaStatementHandler.getValue("delegate.boundSql.parameterObject.orderSort");
+        		sql.append(" ORDER BY ").append(orderBy.toString()).append(" ").append(orderSort);
                 metaStatementHandler.setValue("delegate.boundSql.sql", sql.toString());
         	}
 

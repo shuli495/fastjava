@@ -5,16 +5,16 @@ import java.util.List;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fastjavaframework.page.Page;
-import com.fastjavaframework.page.Sort;
+import com.fastjavaframework.page.OrderSort;
 import com.fastjavaframework.util.VerifyUtils;
 
 public class BaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@JSONField(serialize = false)
-	private String order;	//排序
+	private String orderBy;	//排序
 	@JSONField(serialize = false)
-	private String sort;	//排序方式 可传单值或列表
+	private String orderSort;	//排序方式 可传单值或列表
 	@JSONField(serialize = false)
 	private Integer rowNum;	//返回几行数据 分页接口会查询总数 不需要总数使用此字段效率高
 	
@@ -23,48 +23,54 @@ public class BaseBean implements Serializable {
 	
 	/**
 	 * 单列排序
-	 * @param order
+	 * @param orderBy
 	 */
-	public void setOrder(String order) {
-		this.order = order;
+	public void setOrderBy(String orderBy) {
+		this.orderBy = orderBy;
 		//默认ASC
-		if(VerifyUtils.isEmpty(getSort())) {
-			setSort(Sort.ASC);
+		if(VerifyUtils.isEmpty(getOrderSort())) {
+			setOrderSort(OrderSort.ASC);
 		}
 	}
 	
 	/**
 	 * 多列排序
-	 * @param orders
+	 * @param orderBys
 	 */
-	public void setOrder(List<String> orders) {
-		StringBuffer orderList = new StringBuffer();
-		for(String str : orders) {
-			if(VerifyUtils.isEmpty(orderList)) {
-				orderList.append(str);
+	public void setOrder(List<String> orderBys) {
+		StringBuffer orderByList = new StringBuffer();
+		for(String str : orderBys) {
+			if(VerifyUtils.isEmpty(orderByList)) {
+				orderByList.append(str);
 			} else {
-				orderList.append(",").append(str);
+				orderByList.append(",").append(str);
 			}
 		}
-		this.order = orderList.toString();
+		this.orderBy = orderByList.toString();
 		
-		if(VerifyUtils.isEmpty(getSort())) {
-			setSort(Sort.ASC);
+		if(VerifyUtils.isEmpty(getOrderSort())) {
+			setOrderSort(OrderSort.ASC);
 		}
 	}
 
-	public String getSort() {
-		return sort;
+	public String getOrderSort() {
+		return orderSort;
 	}
 
-	public void setSort(Sort sort) {
-		if(null != sort) {
-			this.sort = sort.toString();
+	public void setOrderSort(OrderSort orderSort) {
+		if(null != orderSort) {
+			this.orderSort = orderSort.toString();
 		}
 	}
 
-	public String getOrder() {
-		return order;
+	public void setOrderSort(String orderSort) {
+		if(VerifyUtils.isNotEmpty(orderSort) && orderSort.equalsIgnoreCase(OrderSort.DESC.toString())) {
+			this.orderSort = orderSort.toString();
+		}
+	}
+
+	public String getOrderBy() {
+		return orderBy;
 	}
 
 	public Page getPage() {

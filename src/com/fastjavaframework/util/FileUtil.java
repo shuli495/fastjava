@@ -239,9 +239,14 @@ public class FileUtil {
 	 * 读取文件内容
 	 * @param path 文件绝对路径
      * @param code 文件编码 不传直接查询文件的编码
+	 * @return 文件不存在返回""
 	 */
 	public static String readFile(String path, String code) {
         File file = new File(path);
+		if(!file.exists()) {
+			return "";
+		}
+
         if(VerifyUtils.isEmpty(code)) {
             code = getCodeType(path);
         }
