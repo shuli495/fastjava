@@ -103,14 +103,14 @@ public class MapperHelper {
 		Map<String,String> replaceMap = new HashMap<>();
 		
 		//遍历项目子目录
-		List<String> paths = FileUtil.iterator(projectPath, "folder", "path", true);
+		List<String> paths = FileUtil.iterator(projectPath, "", "path", true);
 		for(String path : paths) {
 			int index = 0;
 			String rePath = "\"" + path.replaceAll("\\\\", "\\\\\\\\") + "\"";
 			
 			if((index=path.indexOf(javaPath)) != -1) {	//java类路径
 				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".").replaceAll(Matcher.quoteReplacement(File.separator),".")+"\"";
-				if(path.indexOf("action") != -1 || path.indexOf("control") != -1) {
+				if(path.endsWith("action") || path.endsWith("control") || path.endsWith("controller")) {
 					replaceMap.put("controllerNameSpace", nameSpace);
 					replaceMap.put("controllerPath", rePath);
 				} else if(path.endsWith("service")) {
