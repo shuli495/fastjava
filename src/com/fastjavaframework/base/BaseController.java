@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fastjavaframework.response.ReturnJson;
 
-public class BaseAction<B extends BaseService<?, ?>> {
+public class BaseController<B extends BaseService<?, ?>> {
 
 	@Autowired
 	public HttpServletRequest request;

@@ -103,16 +103,16 @@ public class MapperHelper {
 		Map<String,String> replaceMap = new HashMap<>();
 		
 		//遍历项目子目录
-		List<String> paths = FileUtil.iterator(projectPath, "", "path", true);
+		List<String> paths = FileUtil.iterator(projectPath, "folder", "path", true);
 		for(String path : paths) {
 			int index = 0;
 			String rePath = "\"" + path.replaceAll("\\\\", "\\\\\\\\") + "\"";
 			
 			if((index=path.indexOf(javaPath)) != -1) {	//java类路径
 				String nameSpace = "\""+path.substring(index+javaPath.length()).replaceAll("\\\\", ".").replaceAll(Matcher.quoteReplacement(File.separator),".")+"\"";
-				if(path.endsWith("action")) {
-					replaceMap.put("actionNameSpace", nameSpace);
-					replaceMap.put("actionPath", rePath);
+				if(path.indexOf("action") != -1 || path.indexOf("control") != -1) {
+					replaceMap.put("controllerNameSpace", nameSpace);
+					replaceMap.put("controllerPath", rePath);
 				} else if(path.endsWith("service")) {
 					replaceMap.put("serviceNameSpace", nameSpace);
 					replaceMap.put("servicePath", rePath);
@@ -156,8 +156,8 @@ public class MapperHelper {
 	private String daoNameSpace = "";	//dao命名空间(不包含类名)
 	private String serviceClassName = "";	//service类名
 	private String serviceNameSpace = "";	//service命名空间(不包含类名)
-	private String actionClassName = "";	//action类名
-	private String actionNameSpace = "";	//action命名空间(不包含类名)
+	private String controllerClassName = "";	//controller类名
+	private String controllerNameSpace = "";	//controller命名空间(不包含类名)
 	private String propertiesPath = "";		//校验提示properties路径
 
 	
@@ -214,7 +214,7 @@ public class MapperHelper {
 			this.daoClassName = tableClassName + "Dao";
 			this.voClassName = tableClassName + "VO";
 			this.serviceClassName = tableClassName + "Service";
-			this.actionClassName = tableClassName + "Action";
+			this.controllerClassName = tableClassName + "Controller";
 			this.mapperName = tableJavaName + "Mapper";
 
 			//设置命名空间
@@ -230,8 +230,8 @@ public class MapperHelper {
 			if(isNeedCreate(params, "serviceNameSpace")) {
 				this.serviceNameSpace = params.get("serviceNameSpace")[0];
 			}
-			if(isNeedCreate(params, "actionNameSpace")) {
-				this.actionNameSpace = params.get("actionNameSpace")[0];
+			if(isNeedCreate(params, "controllerNameSpace")) {
+				this.controllerNameSpace = params.get("controllerNameSpace")[0];
 			}
 
 			// 修改文件 获取要添加的列
@@ -300,12 +300,12 @@ public class MapperHelper {
 					addService(filePath);
 				}
 			}
-			if(isNeedCreate(params, "actionPath")) {
-				String filePath = params.get("actionPath")[0] + File.separator + actionClassName + ".java";
+			if(isNeedCreate(params, "controllerPath")) {
+				String filePath = params.get("controllerPath")[0] + File.separator + controllerClassName + ".java";
 				if(model.indexOf("new") != -1) {
-					newControl(filePath);
+					newController(filePath);
 				} else {
-					addControl(filePath);
+					addController(filePath);
 				}
 			}
 		}
@@ -774,10 +774,10 @@ public class MapperHelper {
 	}
 
 	/**
-	 * 创建action层
+	 * 创建controller层
 	 * @param path 生成路径
 	 */
-	private void newControl(String path) {
+	private void newController(String path) {
 		StringBuffer code = new StringBuffer();
 		
 		String importDate = "";
@@ -929,7 +929,7 @@ public class MapperHelper {
 				   .append(" */\n");
 		}
 		
-		code.append("package ").append(actionNameSpace).append(";\n\n")
+		code.append("package ").append(controllerNameSpace).append(";\n\n")
 			.append(importDate)
 			.append(!"".equals(delColumn)?"import java.util.ArrayList;\n":"")
 			.append("import java.util.Arrays;\n\n")
@@ -942,14 +942,14 @@ public class MapperHelper {
 			.append("import org.springframework.web.bind.annotation.RequestMethod;\n\n")
 			.append("String".equals(columnJavaPrimaryType())?"import com.fastjavaframework.util.UUID;\n":"")
 			.append("import com.fastjavaframework.page.Page;\n")
-			.append("import com.fastjavaframework.base.BaseAction;\n")
+			.append("import com.fastjavaframework.base.BaseController;\n")
 			.append("import com.fastjavaframework.exception.ThrowPrompt;\n")
 			.append("import ").append(voNameSpace).append(".").append(voClassName).append(";\n")
 			.append("import ").append(serviceNameSpace).append(".").append(serviceClassName).append(";\n\n")
 			.append(remarks)
 			.append("@RestController\n")
 			.append("@RequestMapping(value=\"/").append(tableJavaName).append("\")\n")
-			.append("public class ").append(actionClassName).append(" extends BaseAction<").append(serviceClassName).append("> {\n\n")
+			.append("public class ").append(controllerClassName).append(" extends BaseController<").append(serviceClassName).append("> {\n\n")
 			
 			//create
 			.append("\t/**\n")
@@ -1061,7 +1061,7 @@ public class MapperHelper {
 	}
 
 	/**
-	 * 设置controller query方法参数
+	 * 设置controllerler query方法参数
 	 * @param columnMap
 	 * @param nIndex			参数序列 用户换行
 	 * @param queryCondition	保存参数的字符串
@@ -1508,16 +1508,16 @@ public class MapperHelper {
 	}
 
 	/**
-	 * 增加模式 修改control
+	 * 增加模式 修改controller
 	 * @param path
      */
-	private void addControl(String path) {
+	private void addController(String path) {
 		//源代码
 		String code = FileUtil.readFile(path, "UTF-8");
 
 		//文件不存在则新建
 		if(VerifyUtils.isEmpty(code)) {
-			newControl(path);
+			newController(path);
 			return;
 		}
 
