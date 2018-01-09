@@ -75,7 +75,7 @@ public class Fastjava extends HttpServlet {
 			replaceMap.putAll(moduleHelper.errInfo(replaceMap.get("springPath")));
 			//检验Druid是否启动
 			replaceMap.putAll(moduleHelper.druidInfo(replaceMap.get("webXmlPath")));
-		} else if(methodType.startsWith("logHelper")) {
+		} else if(methodType.startsWith("logHelper")) {	//日志管理
 			LogHelper logHelper = new LogHelper();
 			subHTML = new LogHelperHtml().html();
 
@@ -87,7 +87,7 @@ public class Fastjava extends HttpServlet {
 			replaceMap.putAll(logHelper.sqlInfo(replaceMap.get("log4jPath")));
 			//检验sql打印-jdbcUrl是否配置
 			replaceMap.putAll(logHelper.dataSourceInfo(replaceMap.get("dataSourcePath")));
-		} else if(methodType.startsWith("cacheHelper")) {
+		} else if(methodType.startsWith("cacheHelper")) {	//缓存管理
 			CacheHelper cacheHelper = new CacheHelper();
 			subHTML = new CacheHelperHtml().html();
 
@@ -100,7 +100,7 @@ public class Fastjava extends HttpServlet {
 			if(null != replaceMap.get("mapperPath")) {
 				replaceMap.putAll(cacheHelper.cacheInfo(replaceMap.get("mapperPath"),ctx));
 			}
-		} else if(methodType.startsWith("apiHelper")) {
+		} else if(methodType.startsWith("apiHelper")) {	//api管理
 			APIHelper apiHelper = new APIHelper();
 			subHTML = new ApiHelperHtml().html();
 			
@@ -148,10 +148,8 @@ public class Fastjava extends HttpServlet {
 
 			//获取controller
 			replaceMap.putAll(apiHelper.getController(replaceMap.get("controllerPath"),replaceMap.get("controllerChkHiden")));
-		} else if(methodType.startsWith("quartzHelper")) {
+		} else if(methodType.startsWith("quartzHelper")) {	//定时任务管理
 			subHTML = new QuartzHelperHtml().html();
-		} else if(methodType.startsWith("deploymentHelper")) {
-			subHTML = new DeploymentHelperHtml().html();
 		}
 		
 		returnJs.append("</script>");

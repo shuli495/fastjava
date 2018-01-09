@@ -1,105 +1,5 @@
 package com.fastjavaframework.support.html;
 
-/*
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<style>
-body {
-	background : #F5F5F5;
-	margin: 0;
-	font-family:Microsoft Yahei,Helvetica Neue,Hiragino Sans GB,WenQuanYi Micro Hei,sans-serif;
-}
-#navigation {
-	background-color: white;
-	-webkit-box-shadow: 0 0 2px 0 rgba(0,0,0,.5);
-	box-shadow:0px 0px 2px 0px rgba(0,0,0,0.5);
-	height: 50px;
-	padding-left:10%;
-	line-height:50px;
-}
-#navigation > font {
-	font-size:28px;
-	font-weight:bold;
-	color:#404040;
-}
-#navigation > a {
-	margin-left:50px;
-	font-size:16px;
-	text-decoration:none;
-	color:#383838;
-}
-#navigation > a:hover {
-	color:#3075DD;
-}
-#subPage {
-	position:absolute;
-	width:100%;
-}
-.pathDiv {
-	background-color:white;
-	margin:50px auto 30px auto;
-	padding-top:10px;
-	padding-left:20px;
-	height:40px;
-	width:950px;
-	border-bottom:1px solid rgba(0,0,0,.15);
-	font-size:18px;
-}
-.pathDiv>input {
-	width:790px;
-	height:20px;
-}
-.pathDiv>button {
-	font-size:13px;
-}
-</style>
-</head>
-
-<body>
-<div id="navigation">
-<font>FastJava</font>
-<a href="fastjava?methodType=mapperHelper" id="mapperHelper">类生成器</a>
-<a href="fastjava?methodType=apiHelper" id="apiHelper">API生成器</a>
-<a href="fastjava?methodType=moduleHelper" id="mooduleHelper">模块管理</a>
-<a href="fastjava?methodType=cacheHelper" id="cacheHelper">缓存</a>
-<a href="fastjava?methodType=logHelper" id="logHelper">日志</a>
-<a href="fastjava?methodType=quartzHelper" id="quartzHelper">定时任务</a>
-<a href="fastjava?methodType=deploymentHelper" id="deploymentHelper">发版优化</a>
-</div>
-
-<form action="fastjava" id="myForm" method="post">
-<input type="hidden" value="" id="methodType" name="methodType" text="后台调用方法" />
-	<div class="pathDiv">
-		项目路径&nbsp;&nbsp;<input type="text" id="projectPath" name="projectPath"/>&nbsp;&nbsp;
-		<button id="selectPath" onclick="readPath();">确定</button>
-	</div>
-	<div id="subPage">
-	</div>
-</form>
-<script>
-var projectPath;
-window.onload = function() {
-	document.getElementById("projectPath").value = typeof(projectPath)=="undefined"?"":projectPath;
-
-	var navigationA = document.getElementById("navigation").getElementsByTagName("a");
-	for(var i=0; i<navigationA.length; i++) {
-		navigationA[i].href = navigationA[i].href + "&projectPath=" + document.getElementById("projectPath").value;
-	}
-
-	onloadFunction();
-}
-
-//调用servlet
-function doFastJava(methodType) {
-	document.getElementById("methodType").value = methodType;
-	document.getElementById("myForm").submit();
-}
-</script>
-</body>
-</html>
- */
 public class IndexHtml {
 
     public String html() {
@@ -171,7 +71,6 @@ public class IndexHtml {
                 .append(newLine).append("<a href=\"fastjava?methodType=cacheHelper\" id=\"cacheHelper\">缓存</a>")
                 .append(newLine).append("<a href=\"fastjava?methodType=logHelper\" id=\"logHelper\">日志</a>")
                 .append(newLine).append("<a href=\"fastjava?methodType=quartzHelper\" id=\"quartzHelper\">定时任务</a>")
-                .append(newLine).append("<a href=\"fastjava?methodType=deploymentHelper\" id=\"deploymentHelper\">发版优化</a>")
                 .append(newLine).append("</div>")
                 .append(newLine).append("")
                 .append(newLine).append("<form action=\"fastjava\" id=\"myForm\" method=\"post\">")
