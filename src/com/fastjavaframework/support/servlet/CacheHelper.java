@@ -23,7 +23,11 @@ import com.fastjavaframework.util.VerifyUtils;
  */
 public class CacheHelper {
 
-	//读取mapper路径
+	/**
+	 * 读取mapper路径
+	 * @param projectPath
+	 * @return
+     */
 	public Map<String,String> readPath(String projectPath) {
 		Map<String,String> replaceMap = new HashMap<>();
 		

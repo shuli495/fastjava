@@ -35,6 +35,7 @@ public class SqlDao extends SqlSessionDaoSupport {
 	}
 
 	@Resource
+	@Override
 	public void setSqlSessionFactory(SqlSessionFactory sqlSessionFactory){
 		super.setSqlSessionFactory(sqlSessionFactory);
 	}

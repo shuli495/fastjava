@@ -12,7 +12,7 @@ public class ColorUtil {
 	 * @param str
 	 * @return
 	 */
-	public static Color String2Color(String str) {  
+	public static Color string2Color(String str) {
         int i = Integer.parseInt(str.substring(1), 16);  
         return new Color(i);  
     } 
@@ -22,14 +22,14 @@ public class ColorUtil {
 	 * @param color
 	 * @return
 	 */
-	public static String Color2String(Color color) {  
-        String R = Integer.toHexString(color.getRed());  
-        R = R.length() < 2 ? ('0' + R) : R;  
-        String B = Integer.toHexString(color.getBlue());  
-        B = B.length() < 2 ? ('0' + B) : B;  
-        String G = Integer.toHexString(color.getGreen());  
-        G = G.length() < 2 ? ('0' + G) : G;  
-        return '#' + R + B + G;  
+	public static String color2String(Color color) {
+        String r = Integer.toHexString(color.getRed());
+        r = r.length() < 2 ? ('0' + r) : r;
+        String b = Integer.toHexString(color.getBlue());
+        b = b.length() < 2 ? ('0' + b) : b;
+        String g = Integer.toHexString(color.getGreen());
+        g = g.length() < 2 ? ('0' + g) : g;
+        return '#' + r + b + g;
     }  
 	
 }

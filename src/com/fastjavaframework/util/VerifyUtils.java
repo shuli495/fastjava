@@ -17,8 +17,9 @@ public class VerifyUtils {
 	 * @return null或空返回true
 	 */
 	public static boolean isEmpty(Object obj) {
-		if (null == obj || "null".equals(obj))
+		if (null == obj || "null".equals(obj)) {
 			return true;
+		}
 
 		if (obj instanceof String && (null == obj || "null".equals(((String) obj).trim()) || "".equals(((String) obj).trim()))) {
 			return true;
@@ -62,8 +63,8 @@ public class VerifyUtils {
 	 * @return true 格式正确 false 格式错误
 	 */
 	public Boolean isIpAdd(String ipString) {
-		Pattern pattern = Pattern
-				.compile("\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b");
+		String regex = "\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b";
+		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(ipString);
 		return matcher.matches();
 	}
@@ -75,8 +76,8 @@ public class VerifyUtils {
 	 * @return true 格式正确 false 格式错误
 	 */
 	public boolean verifyMail(String mail) {
-		Pattern p = Pattern
-				.compile("^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\\.([a-zA-Z0-9_-])+)+$");
+		String regex = "^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\\.([a-zA-Z0-9_-])+)+$";
+		Pattern p = Pattern.compile(regex);
 		Matcher m = p.matcher(mail);
 		return m.matches();
 	}

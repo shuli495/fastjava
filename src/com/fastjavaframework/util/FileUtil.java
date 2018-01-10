@@ -74,7 +74,7 @@ public class FileUtil {
 	 * @param path 路径
 	 * @return 目录删除成功返回true，否则返回false
 	 */
-	public static void deleteFolder(String path, String... FileName) {
+	public static void deleteFolder(String path, String... fileName) {
 		// 如果path不以文件分隔符结尾，自动添加文件分隔符
 		if (!path.endsWith(File.separator)) {
 			path = path + File.separator;
@@ -90,15 +90,15 @@ public class FileUtil {
 			// 删除子文件
 			if (files[i].isFile()) {
 				boolean isNeedDel = true;
-				if (!VerifyUtils.isEmpty(FileName)
-						&& files[i].getName().indexOf(FileName.toString()) == -1) {
+				if (!VerifyUtils.isEmpty(fileName)
+						&& files[i].getName().indexOf(fileName.toString()) == -1) {
 					isNeedDel = false;
 				}
 				if (isNeedDel) {
 					files[i].delete();
 				}
 			} else { // 删除子目录
-				deleteFolder(files[i].getAbsolutePath(), FileName);
+				deleteFolder(files[i].getAbsolutePath(), fileName);
 			}
 		}
 	}
@@ -131,12 +131,15 @@ public class FileUtil {
 					|| ("file".equals(queryType) && !files[i].isDirectory())
 					|| "".equals(queryType)) {
 				switch (returnType) {
-				case "name":
-					fileNames.add(files[i].getName());
-					break;
-				case "path":
-					fileNames.add(files[i].getPath());
-					break;
+					default:
+						fileNames.add(files[i].getName());
+						break;
+					case "name":
+						fileNames.add(files[i].getName());
+						break;
+					case "path":
+						fileNames.add(files[i].getPath());
+						break;
 				}
 			}
 

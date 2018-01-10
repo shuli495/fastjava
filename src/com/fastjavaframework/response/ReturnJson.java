@@ -33,7 +33,7 @@ public class ReturnJson {
 		String callback = "";
 		while(names.hasMoreElements()) {
 			String name = names.nextElement().toString();
-			if(name.equalsIgnoreCase("callback")) {
+			if("callback".equalsIgnoreCase(name)) {
 				String value = request.getParameter(name);
 				callback = "".equals(value)?"callback":value;
 				break;

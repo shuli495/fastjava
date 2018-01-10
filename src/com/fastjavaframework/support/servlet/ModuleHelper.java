@@ -17,7 +17,11 @@ import com.fastjavaframework.util.VerifyUtils;
  */
 public class ModuleHelper {
 
-	//读取spring配置文件路径
+	/**
+	 * 读取spring配置文件路径
+	 * @param projectPath
+	 * @return
+     */
 	public Map<String,String> readPath(String projectPath) {
 		Map<String,String> replaceMap = new HashMap<>();
 		

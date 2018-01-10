@@ -20,8 +20,10 @@ import com.fastjavaframework.util.VerifyUtils;
  */
 public class ExceptionHandler implements HandlerExceptionResolver {
 	private static Logger logger = LoggerFactory.getLogger(ExceptionHandler.class);
-	
-	//自定义错误信息
+
+	/**
+	 * 自定义错误信息
+	 */
 	public String message = "";
 
 	@Override

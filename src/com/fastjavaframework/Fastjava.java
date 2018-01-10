@@ -121,7 +121,7 @@ public class Fastjava extends HttpServlet {
 					try {
 						in = new FileInputStream(filePath);
 						int len = 0;
-						byte buf[] = new byte[1024];
+						byte[] buf = new byte[1024];
 						out = resp.getOutputStream();
 						while ((len = in.read(buf)) > 0) {
 							out.write(buf, 0, len);

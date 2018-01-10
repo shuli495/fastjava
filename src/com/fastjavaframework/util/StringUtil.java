@@ -4,14 +4,14 @@ public class StringUtil {
 	
 	/**
 	 * 计算符号出现次数
-	 * @param Str 字符串
+	 * @param str 字符串
 	 * @param item 要查找的符号
 	 * @return
 	 */
-	public static int counter(String Str, char item) {
+	public static int counter(String str, char item) {
 		int count = 0;
-		for (int i = 0; i < Str.length(); i++) {
-			if (Str.charAt(i) == item) {
+		for (int i = 0; i < str.length(); i++) {
+			if (str.charAt(i) == item) {
 				count++;
 			}
 		}

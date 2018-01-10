@@ -26,7 +26,7 @@ public class BaseService<D extends BaseDao,B extends BaseBean> {
 	 * 批量插入
 	 * @param list<bean>
 	 */
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public int baseInsertBatch(List<B> list) {
 		return dao.baseInsertBatch(list);
 	}
@@ -43,7 +43,7 @@ public class BaseService<D extends BaseDao,B extends BaseBean> {
 	 * 批量更新
 	 * @param list<bean>
 	 */
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public int baseUpdateBatch(List<B> list) {
 		return dao.baseUpdateBatch(list);
 	}
@@ -60,7 +60,7 @@ public class BaseService<D extends BaseDao,B extends BaseBean> {
 	 * 批量逻辑删除
 	 * @param list<bean>
 	 */
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public int baseDeleteLogicBatch(List<B> list) {
 		return dao.baseDeleteLogicBatch(list);
 	}
@@ -77,7 +77,7 @@ public class BaseService<D extends BaseDao,B extends BaseBean> {
 	 * 批量物理删除
 	 * @param list id
 	 */
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public int baseDeleteBatch(List<?> list) {
 		return dao.baseDeleteBatch(list);
 	}

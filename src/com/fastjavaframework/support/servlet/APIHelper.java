@@ -25,10 +25,13 @@ import javax.validation.constraints.NotNull;
 /**
  * api管理
  */
-@SuppressWarnings("unchecked")
 public class APIHelper {
-	
-	//读取spring配置文件路径
+
+	/**
+	 * 读取spring配置文件路径
+	 * @param projectPath
+	 * @return
+     */
 	public Map<String,String> readPath(String projectPath) {
 		Map<String,String> replaceMap = new HashMap<>();
 		
@@ -109,7 +112,8 @@ public class APIHelper {
 			/*******************************获取类信息begin**************************************/
 			// 获取class包名
 			String packageName = "";
-			Matcher matcher = Pattern.compile("package\\s+.+\\s*;").matcher(javaCode);
+			String regex = "package\\s+.+\\s*;";
+			Matcher matcher = Pattern.compile(regex).matcher(javaCode);
 			if (matcher.find()) {
 				packageName = matcher.group(0);
 			}
@@ -130,7 +134,8 @@ public class APIHelper {
 
 			//类注释
 			String clzNote = "";
-			Matcher classMatcher = Pattern.compile("public\\s+class\\s+.+\\{").matcher(javaCode);
+			regex = "public\\s+class\\s+.+\\{";
+			Matcher classMatcher = Pattern.compile(regex).matcher(javaCode);
 			if (classMatcher.find()) {
 				int endIndex = javaCode.indexOf(classMatcher.group(0));
 				
@@ -165,9 +170,11 @@ public class APIHelper {
 			
 
 			/*******************************获取方法信息begin***********************************/
-			Pattern leftpattern = Pattern.compile("/\\*");
+			regex = "/\\*";
+			Pattern leftpattern = Pattern.compile(regex);
 			Matcher leftmatcher = leftpattern.matcher(javaCode);
-			Pattern rightpattern = Pattern.compile("\\)\\s*\\{");
+			regex = "\\)\\s*\\{";
+			Pattern rightpattern = Pattern.compile(regex);
 			Matcher rightmatcher = rightpattern.matcher(javaCode);
 
 			Map<String,String> notes = new HashMap<>();	//方法注释
@@ -431,7 +438,7 @@ public class APIHelper {
 			for(Integer i : methodIndx.keySet()) {
 				int smallNum = 0;
 				for(Integer j : methodIndx.keySet()) {
-					if(i != j && i > j) {
+					if(!i.equals(j) && i > j) {
 						smallNum++;
 					}
 				}
@@ -892,7 +899,8 @@ public class APIHelper {
 	 * @return	<引用类的自定义名称，引用类的包名.类名>
      */
 	public Map<String, String> getPublicVariable(String clzBody) {
-		Matcher publicServiceMatcher = Pattern.compile("public\\s+.*\\s+.*\\s*;").matcher(clzBody);
+		String regex = "public\\s+.*\\s+.*\\s*;";
+		Matcher publicServiceMatcher = Pattern.compile(regex).matcher(clzBody);
 
 		Map<String, String> publicServices = new HashMap<>();
 		while (publicServiceMatcher.find()) {

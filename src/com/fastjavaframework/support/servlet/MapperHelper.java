@@ -72,7 +72,7 @@ public class MapperHelper {
 					}
 				}
 				
-				if(!div.toString().equals("[")) {
+				if(!"[".equals(div.toString())) {
 					div.append(",");
 				}
 				
@@ -95,8 +95,12 @@ public class MapperHelper {
 		replaceMap.put("tableInfos", div.toString());
 		return replaceMap;
 	}
-	
-	//读取文件包路径
+
+	/**
+	 * 读取文件包路径
+	 * @param projectPath
+	 * @return
+     */
 	public Map<String,String> readPath(String projectPath) {
 		String javaPath = "src"+File.separator+"main"+File.separator+"java"+File.separator;		//java包
 		String resourcesPath = "src"+File.separator+"main"+File.separator+"resources"+File.separator;		//配置文件
@@ -585,8 +589,13 @@ public class MapperHelper {
 		Map<String, String> annotation = columnAnnotation(tableName, columnMap);	//当前列注解
 
 		String annotations = annotation.get("annotations");
+
+		if(VerifyUtils.isNotEmpty(remarks)) {
+			attribute.append("\t").append(remarks).append("\n");
+		}
+
 		attribute.append(null == annotations ? "" : annotations)
-				.append("\tprivate ").append(type).append(" ").append(name).append(";\t").append(remarks).append("\n\n");
+				.append("\tprivate ").append(type).append(" ").append(name).append(";\n\n");
 	}
 
 	/**
@@ -1035,8 +1044,8 @@ public class MapperHelper {
 			.append("\t@RequestMapping(method=RequestMethod.GET)\n")
 			.append("\tpublic Object query(").append(queryCondition).append(") {\n")
 			.append("\t\t").append(voClassName).append(" vo = new ").append(voClassName).append("();\n")
-			.append(queryConditionSet).append("\n")
-			.append("\t\t//排序\n")
+			.append(queryConditionSet)
+			.append("\t\t// 排序\n")
 			.append("\t\tif(null != orderBy) {\n")
 			.append("\t\t\tvo.setOrderBy(orderBy);\n")
 			.append("\t\t}\n")
@@ -1233,7 +1242,8 @@ public class MapperHelper {
 
 			//用字符串模式设置xml
 			// insert
-			Matcher insertMatcher = Pattern.compile("<insert[\\s\\S]*?</insert>").matcher(code);
+			String regex = "<insert[\\s\\S]*?</insert>";
+			Matcher insertMatcher = Pattern.compile(regex).matcher(code);
 			while (insertMatcher.find()) {
 				String insertCode = insertMatcher.group(0);
 
@@ -1246,7 +1256,8 @@ public class MapperHelper {
 			}
 
 			// select
-			Matcher selectMatcher = Pattern.compile("<select[\\s\\S]*?</select>").matcher(code);
+			regex = "<select[\\s\\S]*?</select>";
+			Matcher selectMatcher = Pattern.compile(regex).matcher(code);
 			while (selectMatcher.find()) {
 				String selectCode = selectMatcher.group(0);
 
@@ -1256,7 +1267,8 @@ public class MapperHelper {
 			}
 
 			// update
-			Matcher updateMatcher = Pattern.compile("<update[\\s\\S]*?</update>").matcher(code);
+			regex = "<update[\\s\\S]*?</update>";
+			Matcher updateMatcher = Pattern.compile(regex).matcher(code);
 			while (updateMatcher.find()) {
 				String updateCode = updateMatcher.group(0);
 
@@ -1284,13 +1296,13 @@ public class MapperHelper {
 	 * @return
      */
 	private String setSql(String domContent, String type) {
-		String regex = type.equals("column")?"(\\s+|\r|\t|\n).*(\\s+|\r|\t|\n)((?i)VALUES|(?i)FROM)":
+		String regex = "column".equals(type)?"(\\s+|\r|\t|\n).*(\\s+|\r|\t|\n)((?i)VALUES|(?i)FROM)":
 				"((?i)VALUES<|(?i)VALUES)[\\s\\S]*?(></insert>|</insert>)";
 		Matcher columnMatcher = Pattern.compile(regex).matcher(domContent);
 
 		if (columnMatcher.find()) {
 			String columnStr = columnMatcher.group(0);
-			if(type.equals("column")) {
+			if("column".equals(type)) {
 				columnStr = columnStr.replaceAll("(\\s|\r|\t|\n)", "")
 							.replaceAll("(?i)VALUES","")
 							.replaceAll("(?i)FROM","")
@@ -1322,9 +1334,10 @@ public class MapperHelper {
 					continue;
 				}
 
-				if(type.equals("value")) {
+				if("value".equals(type)) {
 					// 有些value以#{XXX.YYY}格式存在，以此格式更新
-					Matcher valueMatcher = Pattern.compile("(\\{|\\.).*\\}").matcher(columnStrs.get(0));
+					regex = "(\\{|\\.).*\\}";
+					Matcher valueMatcher = Pattern.compile(regex).matcher(columnStrs.get(0));
 					if(valueMatcher.find()) {
 						String key = valueMatcher.group(0).replaceAll("(\\{.*\\.|\\{)","").replace("}","");
 						newColumnStrs[columnIdx] = columnStrs.get(0).replace(key, this.columnJavaName(columnInfo));
@@ -1566,7 +1579,7 @@ public class MapperHelper {
 		//增加setValue
 		int voIdx = code.indexOf(" vo", paramIdx);
 		int setIdx = code.indexOf("\n\n", voIdx);
-		code = new StringBuffer(code).insert(setIdx, "\n" + queryConditionSet).toString();
+		code = new StringBuffer(code).insert(setIdx, "\n" + queryConditionSet.substring(0, queryConditionSet.length()-1)).toString();
 
 		//生成类文件
 		FileUtil.writeFile(code, new File(path));
@@ -1797,9 +1810,9 @@ public class MapperHelper {
 		}
 
 		//@Max or @Digits
-		if (type.equals("Integer") || type.equals("long")
-				|| type.equals("float") || type.equals("double")
-				|| type.equals("Decimal")) {
+		if ("Integer".equals(type) || "long".equals(type)
+				|| "float".equals(type) || "double".equals(type)
+				|| "Decimal".equals(type)) {
 
 			String decimal = map.get("decimal");
 			
@@ -1833,7 +1846,7 @@ public class MapperHelper {
 
 			//设置校验提示信息
 			setMessageProperties(messageKey, messageValue);
-		} else if(type.equals("String")) {	//@Size
+		} else if("String".equals(type)) {	//@Size
 			messageKey = messageKeyHead + ".size";
 			messageValue = remarks + "最大长度为{max}";
 			
@@ -1934,7 +1947,7 @@ public class MapperHelper {
 	 * @return 备注
 	 */
 	private String columnRemarks(Map<String,String> map) {
-		return null == map.get("remarks") || "".equals(map.get("remarks").toString())?"":"//" + map.get("remarks");
+		return null == map.get("remarks") || "".equals(map.get("remarks").toString())?"":"// " + map.get("remarks");
 	}
 	
 	/**

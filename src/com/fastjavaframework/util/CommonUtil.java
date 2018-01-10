@@ -180,9 +180,10 @@ public class CommonUtil {
 	 * @return 是自定义的类true
      */
 	public static boolean isModel(Class clz) {
-		if(clz.getName().indexOf("java.lang") == -1
-				&& !clz.getName().equals("byte") && !clz.getName().equals("short") && !clz.getName().equals("int") && !clz.getName().equals("long")
-				&& !clz.getName().equals("float") && !clz.getName().equals("double") && !clz.getName().equals("boolean") && !clz.getName().equals("char")) {
+		String clzName = clz.getName();
+		if(clzName.indexOf("java.lang") == -1
+				&& !"byte".equals(clzName) && !"short".equals(clzName) && !"int".equals(clzName) && !"long".equals(clzName)
+				&& !"float".equals(clzName) && !"double".equals(clzName) && !"boolean".equals(clzName) && !"char".equals(clzName)) {
 			return true;
 		}
 
@@ -195,8 +196,8 @@ public class CommonUtil {
 	 * @return 是自定义的类true
 	 */
 	public static boolean isModel(String classStr) {
-		if(!classStr.equals("byte") && !classStr.equals("short") && !classStr.equals("int") && !classStr.equals("long")
-			&& !classStr.equals("float") && !classStr.equals("double") && !classStr.equals("boolean") && !classStr.equals("char")) {
+		if(!"byte".equals(classStr) && !"short".equals(classStr) && !"int".equals(classStr) && !"long".equals(classStr)
+			&& !"float".equals(classStr) && !"double".equals(classStr) && !"boolean".equals(classStr) && !"char".equals(classStr)) {
 			return true;
 		}
 
@@ -245,7 +246,7 @@ public class CommonUtil {
 	 * @param buf
 	 * @return
 	 */
-	public static String parseByte2HexStr(byte buf[]) {
+	public static String parseByte2HexStr(byte[] buf) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < buf.length; i++) {
 			String hex = Integer.toHexString(buf[i] & 0xFF);
@@ -262,8 +263,10 @@ public class CommonUtil {
 	 * @return
 	 */
 	public static byte[] parseHexStr2Byte(String hexStr) {
-		if (hexStr.length() < 1)
+		if (hexStr.length() < 1) {
 			return null;
+		}
+
 		byte[] result = new byte[hexStr.length()/2];
 		for (int i = 0;i< hexStr.length()/2; i++) {
 			int high = Integer.parseInt(hexStr.substring(i*2, i*2+1), 16);
