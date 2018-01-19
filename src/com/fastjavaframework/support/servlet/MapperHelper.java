@@ -1171,6 +1171,10 @@ public class MapperHelper {
 
 			Document document = builder.parse(file);
 
+			if(this.addColumns.size() == 0) {
+				return;
+			}
+
 			for(Map<String, Object> column : this.addColumns) {
 				int columnIdx = (int)column.get("columnIdx");	//增加列的位置
 
@@ -1401,7 +1405,9 @@ public class MapperHelper {
 
 		if(domContent.startsWith("<update")) {
 			int trimIdx = domContent.lastIndexOf("</trim>");
-			domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+			if(trimIdx > -1) {
+				domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+			}
 		} else if(domContent.startsWith("<select")
 				&& (domContent.indexOf("id=\"findById\"") == -1 || domContent.indexOf("parameterType=\"string\"") == -1)) {
 			int trimIdx = domContent.lastIndexOf("</where>");
@@ -1422,6 +1428,10 @@ public class MapperHelper {
 		//文件不存在则新建
 		if(VerifyUtils.isEmpty(code)) {
 			newBo(path);
+			return;
+		}
+
+		if(this.addColumns.size() == 0) {
 			return;
 		}
 
@@ -1479,6 +1489,10 @@ public class MapperHelper {
 			return;
 		}
 
+		if(this.addColumns.size() == 0) {
+			return;
+		}
+
 		//设置update修改的属性
 		StringBuffer upColumn = new StringBuffer();
 		for(Map<String, Object> column : this.addColumns) {
@@ -1514,6 +1528,8 @@ public class MapperHelper {
 			}
 
 			code = new StringBuffer(code).insert(returnIdx, upColumn + "\t\t").toString();
+		} else {
+			return;
 		}
 
 		//生成类文件
@@ -1548,6 +1564,8 @@ public class MapperHelper {
 			paramIdx = code.substring(0, funBodyBegIdx).lastIndexOf(")");
 
 			commaSum = fnctionStr.split(",").length;
+		} else {
+			return;
 		}
 
 		//设置新增列的入参、setValue、import
@@ -1555,6 +1573,10 @@ public class MapperHelper {
 		StringBuffer queryConditionSet = new StringBuffer();
 		StringBuffer importRequestParam = new StringBuffer();
 		String importStr = "import org.springframework.web.bind.annotation.RequestParam;\n";
+
+		if(this.addColumns.size() == 0) {
+			return;
+		}
 
 		for(Map<String, Object> column : this.addColumns) {
 			Map<String, String> columnInfo = (Map<String, String>)column.get("column");	//增加列的信息
