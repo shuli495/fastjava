@@ -14,7 +14,7 @@ public class ThrowPrompt extends RuntimeException {
 		super(HttpServletResponse.SC_BAD_REQUEST + RETRUN_PROMPT + msg);
     }
 
-	public ThrowPrompt(String msg, int code) {
+	public ThrowPrompt(String msg, String code) {
 		super(code + RETRUN_PROMPT + msg);
 	}
 }
