@@ -19,20 +19,6 @@ public class BaseController<B extends BaseService<?, ?>> {
 	@Autowired
 	public B service;
 
-	// 客户端ip
-	public String clientIp;
-
-	/**
-	 * 查询客户端ip
-	 */
-	public BaseController() {
-		try{
-			this.clientIp = CommonUtil.getIp(this.request);
-		} catch (Exception e){
-			this.clientIp = "";
-		}
-	}
-
 	/**
 	 * 返回success
 	 */
