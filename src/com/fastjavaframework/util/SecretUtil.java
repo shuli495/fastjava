@@ -9,13 +9,14 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Base64;
 
+import com.fastjavaframework.common.SecretBase64Enum;
 import com.fastjavaframework.exception.ThrowException;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -100,6 +101,61 @@ public class SecretUtil {
 	}
 
 	/**
+	 * HmacSHA1加密
+	 * @param secret
+	 * @param data
+	 * @return
+	 */
+	public static String hmacsha1(String secret, String data) {
+		return hmacsha("HmacSHA1", secret, data);
+	}
+
+	/**
+	 * HmacSHA256加密
+	 * @param secret
+	 * @param data
+	 * @return
+	 */
+	public static String hmacsha256(String secret, String data) {
+		return hmacsha("HmacSHA256", secret, data);
+	}
+
+	/**
+	 * HmacSHA加密
+	 * @param type
+	 * @param secret
+	 * @param data
+     * @return
+     */
+	private static String hmacsha(String type, String secret, String data) {
+		try {
+			SecretKey secretKey = new SecretKeySpec(secret.getBytes("UTF8"), type);
+			Mac mac = Mac.getInstance(secretKey.getAlgorithm());
+			mac.init(secretKey);
+			byte[] digest = mac.doFinal(data.getBytes("UTF-8"));
+			return byteArrayToHexString(digest);
+		} catch (Exception e) {
+			throw new ThrowException("加密异常");
+		}
+	}
+	private static String byteArrayToHexString(byte[] b) {
+		StringBuilder hs = new StringBuilder();
+
+		for (int n = 0; b!=null && n < b.length; n++) {
+			String stmp = Integer.toHexString(b[n] & 0XFF);
+
+			if (stmp.length() == 1) {
+				hs.append('0');
+			}
+
+			hs.append(stmp);
+		}
+
+		return hs.toString();
+
+	}
+
+	/**
 	 * AES128加密
 	 * @param content 需要被加密的字符串
 	 * @param secret 加密需要的密码
@@ -162,17 +218,7 @@ public class SecretUtil {
 	 * @return 密文
      */
 	public static String base64Encrypt(String content) {
-		byte[] b = null;
-		String s = null;
-		try {
-			b = content.getBytes("utf-8");
-		} catch (Exception e) {
-			throw new ThrowException("base64加密错误：" + e.getMessage());
-		}
-		if (b != null) {
-			s = new BASE64Encoder().encode(b);
-		}
-		return s;
+		return base64Encrypt(SecretBase64Enum.DEF, content);
 	}
 
 	/**
@@ -181,18 +227,54 @@ public class SecretUtil {
 	 * @return 明文
      */
 	public static String base64Decrypt(String content) {
-		byte[] b = null;
-		String result = null;
-		if (content != null) {
-			BASE64Decoder decoder = new BASE64Decoder();
-			try {
-				b = decoder.decodeBuffer(content);
-				result = new String(b, "utf-8");
-			} catch (Exception e) {
-				throw new ThrowException("base64解密错误：" + e.getMessage());
+		return base64Decrypt(SecretBase64Enum.DEF, content);
+	}
+
+	/**
+	 * base64加密
+	 * @param type SecretBase64Enum
+	 * @param content
+     * @return
+     */
+	public static String base64Encrypt(SecretBase64Enum type, String content) {
+		try {
+			switch (type) {
+				case URL:
+					return Base64.getUrlEncoder().encodeToString(content.getBytes("utf-8"));
+				case MIME:
+					return Base64.getMimeEncoder().encodeToString(content.getBytes("utf-8"));
+				default:
+					return Base64.getEncoder().encodeToString(content.getBytes("utf-8"));
 			}
+		} catch (Exception e) {
+			throw new ThrowException("base64加密错误：" + e.getMessage());
 		}
-		return result;
+	}
+
+	/**
+	 * base64解密
+	 * @param type SecretBase64Enum
+	 * @param content
+     * @return
+     */
+	public static String base64Decrypt(SecretBase64Enum type, String content) {
+		try {
+			Base64.Decoder decoder = null;
+
+			switch (type) {
+				case URL:
+					decoder = Base64.getUrlDecoder();
+				case MIME:
+					decoder = Base64.getMimeDecoder();
+				default:
+					decoder = Base64.getDecoder();
+			}
+
+			byte[] asBytes = decoder.decode(content);
+			return new String(asBytes, "utf-8");
+		} catch (Exception e) {
+			throw new ThrowException("base64加密错误：" + e.getMessage());
+		}
 	}
 
 }
