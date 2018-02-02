@@ -1300,16 +1300,20 @@ public class MapperHelper {
 	 * @return
      */
 	private String setSql(String domContent, String type) {
-		String regex = "column".equals(type)?"(\\s+|\r|\t|\n).*(\\s+|\r|\t|\n)((?i)VALUES|(?i)FROM)":
+		String regex = "column".equals(type)?
+				"((?i)INSERT\\s+(?i)"+this.tableName+"\\s*.*\\s*(?i)VALUES)|((?i)SELECT\\s*.*\\s*(?i)FROM)":
 				"((?i)VALUES<|(?i)VALUES)[\\s\\S]*?(></insert>|</insert>)";
 		Matcher columnMatcher = Pattern.compile(regex).matcher(domContent);
 
 		if (columnMatcher.find()) {
 			String columnStr = columnMatcher.group(0);
 			if("column".equals(type)) {
-				columnStr = columnStr.replaceAll("(\\s|\r|\t|\n)", "")
+				columnStr = columnStr
+							.replaceAll("(?i)INSERT","")
 							.replaceAll("(?i)VALUES","")
+							.replaceAll("(?i)SELECT","")
 							.replaceAll("(?i)FROM","")
+							.replaceAll("(\\s|\r|\t|\n)", "")
 							.replaceAll("\\(","")
 							.replaceAll("\\)","");
 			} else {
@@ -1411,7 +1415,9 @@ public class MapperHelper {
 		} else if(domContent.startsWith("<select")
 				&& (domContent.indexOf("id=\"findById\"") == -1 || domContent.indexOf("parameterType=\"string\"") == -1)) {
 			int trimIdx = domContent.lastIndexOf("</where>");
-			domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+			if(trimIdx != -1) {
+				domContent = new StringBuffer(domContent).insert(trimIdx, whereOrUpdateStr).toString();
+			}
 		}
 
 		return domContent;
@@ -1587,12 +1593,6 @@ public class MapperHelper {
 			}
 		}
 
-		//增加import
-		if(!"".equals(importRequestParam.toString())) {
-			int importIdx = code.indexOf("import ");
-			code = new StringBuffer(code).insert(importIdx, importRequestParam.toString()).toString();
-		}
-
 		//增加入参
 		if(paramIdx != 0) {
 			code = new StringBuffer(code).insert(paramIdx, queryCondition).toString();
@@ -1602,6 +1602,12 @@ public class MapperHelper {
 		int voIdx = code.indexOf(" vo", paramIdx);
 		int setIdx = code.indexOf("\n\n", voIdx);
 		code = new StringBuffer(code).insert(setIdx, "\n" + queryConditionSet.substring(0, queryConditionSet.length()-1)).toString();
+
+		//增加import
+		if(!"".equals(importRequestParam.toString())) {
+			int importIdx = code.indexOf("import ");
+			code = new StringBuffer(code).insert(importIdx, importRequestParam.toString()).toString();
+		}
 
 		//生成类文件
 		FileUtil.writeFile(code, new File(path));
