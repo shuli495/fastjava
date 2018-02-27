@@ -51,10 +51,11 @@ public class ReturnJson {
 	/**
 	 * 处理返回信息
 	 * @param type 返回信息类型 success成功 prompt提示 excepiton异常
+	 * @param code 返回状态码
 	 * @param reObj 返回信息
 	 * @return Response
 	 */
-	private Result setReturnInfo(String type, Object reObj, String returnKey) {
+	private Object setReturnInfo(String type, String code, Object reObj, String returnKey) {
 		Object data = null;
 		
 		if("success".equals(type)) {	//成功
@@ -78,21 +79,25 @@ public class ReturnJson {
 		Result result = new Result();
 		result.setStatus(type);
 		result.setData(data == null ? "" : data);
-		
-		return result;
+
+		if(VerifyUtils.isNotEmpty(code)) {
+			result.setCode(code);
+		}
+
+		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
+			// json模式
+			return result;
+		} else {
+			// jsonp模式
+			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
+		}
 	}
 	
 	/**
 	 * 返回success
 	 */
 	public Object success() {
-		Result result = setReturnInfo("success", "success", null);
-
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			return result;
-		} else {
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
+		return this.setReturnInfo("success", null, "success", null);
 	}
 	
 	/**
@@ -101,17 +106,19 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(Object returnObj) {
-		Result result = setReturnInfo("success", returnObj, null);
-
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			// json模式
-			return result;
-		} else {
-			// jsonp模式
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
+		return this.setReturnInfo("success", null, returnObj, null);
 	}
-	
+
+	/**
+	 * 返回Object json
+	 * @param returnObj
+	 * @param code
+	 * @return
+	 */
+	public Object success(Object returnObj, String code) {
+		return this.setReturnInfo("success", code, returnObj, null);
+	}
+
 	/**
 	 * 返回key-value json
 	 * @param returnStrKey
@@ -119,45 +126,46 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(String returnStrKey, Object returnStrVal) {
-		Result result = setReturnInfo("success", returnStrVal, returnStrKey);
+		return setReturnInfo("success", null, returnStrVal, returnStrKey);
+	}
 
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			// json模式
-			return result;
-		} else {
-			// jsonp模式
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
+	/**
+	 * 返回key-value json
+	 * @param returnStrKey
+	 * @param returnStrVal
+	 * @param code
+	 * @return
+	 */
+	public Object success(String returnStrKey, Object returnStrVal, String code) {
+		return setReturnInfo("success", code, returnStrVal, returnStrKey);
 	}
 
 	/**
 	 * 返回提示信息
 	 */
 	public Object prompt(String message) {
-		Result result = setReturnInfo("prompt", message, null);
+		return setReturnInfo("prompt", null, message, null);
+	}
 
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			// json模式
-			return result;
-		} else {
-			// jsonp模式
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
+	/**
+	 * 返回提示信息
+	 */
+	public Object prompt(String message, String code) {
+		return setReturnInfo("prompt", code, message, null);
 	}
 
 	/**
 	 * 返回异常
 	 */
 	public Object exception(String message) {
-		Result result = setReturnInfo("exception", message, null);
+		return setReturnInfo("exception", null, message, null);
+	}
 
-		if(VerifyUtils.isEmpty(this.jsonpCallback)) {
-			// json模式
-			return result;
-		} else {
-			// jsonp模式
-			return this.jsonpCallback + "(" + JSONObject.toJSONString(result) + ")";
-		}
+	/**
+	 * 返回异常
+	 */
+	public Object exception(String message, String code) {
+		return setReturnInfo("exception", code, message, null);
 	}
 	
 }
