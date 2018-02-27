@@ -13,6 +13,8 @@ import com.fastjavaframework.response.ReturnJson;
 import com.fastjavaframework.util.CommonUtil;
 import com.fastjavaframework.util.VerifyUtils;
 
+import java.util.Map;
+
 /**
  * 异常处理类
  * 程序抛出的异常经过此类处理，含有ThrowPrompt.RETRUN_PROMPT信息的是抛出的提示，其他为异常
@@ -33,26 +35,39 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 		Object result = null;
 		
 		//错误信息 格式化空指针异常
-		String nullPointer = "500" + ThrowException.RETRUN_EXCEPTION + "java.lang.NullPointerException";
+		String nullPointer = HttpServletResponse.SC_INTERNAL_SERVER_ERROR + ThrowException.RETRUN_EXCEPTION + "java.lang.NullPointerException";
 		String eMessage = VerifyUtils.isEmpty(ex.getMessage()) ? nullPointer : ex.getMessage();
 
 		if(eMessage.indexOf(ThrowPrompt.RETRUN_PROMPT) != -1) {	//提示信息
 			String[] prompts = eMessage.split(ThrowPrompt.RETRUN_PROMPT);
-			response.setStatus(Integer.valueOf(prompts[0]));
-			result = returnJson.prompt(prompts[1]);
+			String[] codes = prompts[0].split("@");
+
+			String msg = prompts[1];
+			String code = codes[0];
+			String codeType = codes[1];
+
+			if("int".equals(codeType)) {
+				response.setStatus(Integer.valueOf(code));
+				result = returnJson.prompt(msg);
+			} else {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				result = returnJson.prompt(msg, code);
+			}
 		} else {	//异常处理
 			String[] exceptions = eMessage.split(ThrowException.RETRUN_EXCEPTION);
-			int statusCode = 500;
+
+			String code = String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			if(exceptions.length == 1) {	//处理系统排出错误
 				eMessage = exceptions[0];
 			} else {
-				statusCode = Integer.valueOf(exceptions[0]);
+				code = exceptions[0];
 				eMessage = exceptions[1];
 			}
-			response.setStatus(statusCode);
+
 			StringBuffer exMsg = new StringBuffer();
 			
-			exMsg.append("\nException:\n\t")
+			exMsg.append("\nCode:").append(code).append("\n")
+				.append("Exception:\n\t")
 				.append(eMessage).append("\n")
 				.append("Method:\n");
 			
@@ -63,10 +78,24 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 			logger.error(exMsg.toString());
 			
 			//返回提示信息
-			if("".equals(message)) {
-				result = returnJson.exception(eMessage);
+			if(VerifyUtils.isNotEmpty(message)) {
+				eMessage = message;
+			}
+
+			if(code.indexOf("@") != -1) {
+				String[] codes = code.split("@");
+				String codeVal = codes[0];
+				String codeType = codes[1];
+
+				if("int".equals(codeType)) {
+					response.setStatus(Integer.valueOf(codeVal));
+					result = returnJson.exception(eMessage);
+				} else {
+					result = returnJson.exception(eMessage, codeVal);
+				}
 			} else {
-				result = returnJson.exception(message);
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				result = returnJson.exception(eMessage);
 			}
 		}
 
