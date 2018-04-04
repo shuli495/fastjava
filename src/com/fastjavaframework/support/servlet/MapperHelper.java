@@ -610,9 +610,8 @@ public class MapperHelper {
 		getAndSet.append("\tpublic ").append(type).append(" get").append(toClassName(name)).append("() {\n")
 				.append("\t\treturn ").append(name).append(";\n")
 				.append("\t}\n\n")
-				.append("\tpublic ").append(boClassName).append(" set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
+				.append("\tpublic void set").append(toClassName(name)).append("(").append(type).append(" ").append(name).append(") {\n")
 				.append("\t\tthis.").append(name).append(" = ").append(name).append(";\n")
-				.append("\t\treturn this;\n")
 				.append("\t}\n\n");
 	}
 
