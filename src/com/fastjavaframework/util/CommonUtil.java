@@ -1,9 +1,13 @@
 package com.fastjavaframework.util;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.List;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -50,33 +54,6 @@ public class CommonUtil {
 			ip = ip.substring(ip.lastIndexOf(",") + 1, ip.length()).trim();
 		}
 		return ip;
-	}
-
-	/**
-	 * 验证码
-	 * @param type 类型：str字符串 num数字 strAndNum字符串数字随机
-	 * @param number 个数
-	 * @return 随机验证码
-	 */
-	public static String randomCode(String type, int number) {
-		ArrayList<Object> list = new ArrayList<>();
-
-		if (!"num".equals(type)) {
-			for (char c = 'a'; c <= 'z'; c++) {
-				list.add(c);
-			}
-		} else if (!"str".equals(type)) {
-			for (int i = 0; i <= 9; i++) {
-				list.add(i);
-			}
-		}
-
-		StringBuffer str = new StringBuffer();
-		for (int i = 0; i < number; i++) {
-			int num = (int) (Math.random() * list.size());
-			str.append(list.get(num));
-		}
-		return str.toString();
 	}
 	
 	/**
@@ -277,6 +254,15 @@ public class CommonUtil {
 			result[i] = (byte) (high * 16 + low);
 		}
 		return result;
+	}
+
+	/**
+	 * 获取根目录
+	 * @return
+     */
+	public static String getRootPath() {
+		return CommonUtil.class.getClassLoader().getResource("").getPath()
+				.replace("WEB-INF"+ File.separator+"classes"+File.separator, "");
 	}
 
 }
