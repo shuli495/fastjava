@@ -13,6 +13,21 @@ public class Setting {
         return properties;
     }
 
+    /**
+     * 如果value是{XXX}格式，则取系统环境变量
+     * @param key
+     * @return
+     */
+    public static String getPropertyByEnv(String key) {
+        String value = properties.getProperty(key);
+
+        if(value.startsWith("{") && value.endsWith("}")) {
+            return System.getenv(value);
+        } else {
+            return value;
+        }
+    }
+
     public static String getProperty(String key) {
         return properties.getProperty(key);
     }
