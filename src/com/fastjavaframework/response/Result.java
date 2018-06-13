@@ -5,17 +5,10 @@ package com.fastjavaframework.response;
  */
 public class Result {
 
-	private String status;	//success成功 prompt提示信息 exception异常
 	private String code;	//状态码
 	private Object data;	//返回数据
-	
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
+	private String status;	//success成功 prompt提示信息 exception异常
+	private String message;	//提示、异常返回消息
 
 	public String getCode() {
 		return code;
@@ -31,5 +24,21 @@ public class Result {
 
 	public void setData(Object data) {
 		this.data = data;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
 	}
 }

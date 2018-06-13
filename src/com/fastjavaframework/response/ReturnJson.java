@@ -57,27 +57,31 @@ public class ReturnJson {
 	 */
 	private Object setReturnInfo(String type, String code, Object reObj, String returnKey) {
 		Object data = null;
-		
-		if("success".equals(type)) {	//成功
-			if(!VerifyUtils.isEmpty(returnKey)) {	//返回键值对
+		String message = "success";
+
+		if(null != reObj) {
+			if(VerifyUtils.isNotEmpty(returnKey)) {	//返回键值对
 				Map<String,Object> reStrByKeyMap = new HashMap<>();
 				reStrByKeyMap.put(returnKey.toString(), reObj);
 				data = reStrByKeyMap;
 			} else {	//返回对象
 				data = reObj;
 			}
-		} else if("prompt".equals(type)) {	//提示
-			data = reObj.toString();
+		}
+		
+		if("prompt".equals(type)) {	//提示
+			message = reObj.toString();
 		} else if("exception".equals(type)) {	//异常
 			if(!VerifyUtils.isEmpty(reObj)) {
-				data = reObj.toString();
+				message = reObj.toString();
 			} else {
-				data = "请稍后再试！";
+				message = "请稍后再试！";
 			}
 		}
 
 		Result result = new Result();
 		result.setStatus(type);
+		result.setMessage(message);
 		result.setData(data == null ? "" : data);
 
 		if(VerifyUtils.isNotEmpty(code)) {
