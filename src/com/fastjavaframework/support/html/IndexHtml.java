@@ -69,7 +69,6 @@ public class IndexHtml {
                 .append(newLine).append("<a href=\"fastjava?methodType=apiHelper\" id=\"apiHelper\">API生成器</a>")
                 .append(newLine).append("<a href=\"fastjava?methodType=moduleHelper\" id=\"mooduleHelper\">模块管理</a>")
                 .append(newLine).append("<a href=\"fastjava?methodType=cacheHelper\" id=\"cacheHelper\">缓存</a>")
-                .append(newLine).append("<a href=\"fastjava?methodType=logHelper\" id=\"logHelper\">日志</a>")
                 .append(newLine).append("<a href=\"fastjava?methodType=quartzHelper\" id=\"quartzHelper\">定时任务</a>")
                 .append(newLine).append("</div>")
                 .append(newLine).append("")

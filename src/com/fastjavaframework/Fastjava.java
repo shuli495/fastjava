@@ -75,18 +75,6 @@ public class Fastjava extends HttpServlet {
 			replaceMap.putAll(moduleHelper.errInfo(replaceMap.get("springPath")));
 			//检验Druid是否启动
 			replaceMap.putAll(moduleHelper.druidInfo(replaceMap.get("webXmlPath")));
-		} else if(methodType.startsWith("logHelper")) {	//日志管理
-			LogHelper logHelper = new LogHelper();
-			subHTML = new LogHelperHtml().html();
-
-			//读取配置文件路径
-			if("logHelper".equals(methodType)) {
-				replaceMap.putAll(logHelper.readPath(req.getParameter("projectPath")));
-			}
-			//检验sql打印-log4j.xml是否启动
-			replaceMap.putAll(logHelper.sqlInfo(replaceMap.get("log4jPath")));
-			//检验sql打印-jdbcUrl是否配置
-			replaceMap.putAll(logHelper.dataSourceInfo(replaceMap.get("dataSourcePath")));
 		} else if(methodType.startsWith("cacheHelper")) {	//缓存管理
 			CacheHelper cacheHelper = new CacheHelper();
 			subHTML = new CacheHelperHtml().html();
