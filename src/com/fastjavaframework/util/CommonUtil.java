@@ -161,7 +161,7 @@ public class CommonUtil {
      */
 	public static boolean isModel(Class clz) {
 		String clzName = clz.getName();
-		if(clzName.indexOf("java.lang") == -1
+		if(clzName.indexOf("java.lang") == -1 && clzName.indexOf("MultipartFile") == -1
 				&& !"byte".equals(clzName) && !"short".equals(clzName) && !"int".equals(clzName) && !"long".equals(clzName)
 				&& !"float".equals(clzName) && !"double".equals(clzName) && !"boolean".equals(clzName) && !"char".equals(clzName)) {
 			return true;

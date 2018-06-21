@@ -8,11 +8,13 @@ public class ApiHelperTemplateHtml {
 
               sb.append(newLine).append(".catalogue {")
                 .append(newLine).append("   position: fixed;")
-                .append(newLine).append("   top: 30%;")
+                .append(newLine).append("   top: 15%;")
+                .append(newLine).append("   max-height: 75%;")
                 .append(newLine).append("   right: 10px;")
                 .append(newLine).append("   padding-right: 25px;")
                 .append(newLine).append("   background-color: white;")
                 .append(newLine).append("   font-size: 0.9em;")
+                .append(newLine).append("   overflow-y: auto;")
                 .append(newLine).append("}")
                 .append(newLine).append(".catalogue a {")
                 .append(newLine).append("   color: black;")
@@ -96,15 +98,15 @@ public class ApiHelperTemplateHtml {
             .append(newLine).append("   }")
 
 
-                  .append(newLine).append("   var p = document.createElement('p');")
-                  .append(newLine).append("   var b = document.createElement('b');")
-                  .append(newLine).append("   var a = document.createElement('a');")
-                  .append(newLine).append("   a.href = 'javascript:void(0);';")
-                  .append(newLine).append("   a.innerHTML = '^'")
-                  .append(newLine).append("   a.onclick = function() {window.location.hash='#navigation'}")
+            .append(newLine).append("   var p = document.createElement('p');")
+            .append(newLine).append("   var b = document.createElement('b');")
+            .append(newLine).append("   var a = document.createElement('a');")
+            .append(newLine).append("   a.href = 'javascript:void(0);';")
+            .append(newLine).append("   a.innerHTML = '^';")
+            .append(newLine).append("   a.onclick = function() {window.location.hash='#navigation'}")
             .append(newLine).append("   b.appendChild(a);")
-                  .append(newLine).append("   p.appendChild(b);")
-                  .append(newLine).append("   catalogue.appendChild(p);")
+            .append(newLine).append("   p.appendChild(b);")
+            .append(newLine).append("   catalogue.appendChild(p);")
             .append(newLine).append("   document.body.appendChild(catalogue);")
             .append(newLine).append("}");
 

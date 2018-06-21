@@ -107,6 +107,11 @@ public class Fastjava extends HttpServlet {
 			        OutputStream out = null;
 			        
 					try {
+						resp.setHeader("Pragma", "No-cache");
+						resp.setHeader("Cache-Control", "No-cache");
+						resp.setDateHeader("Expires", 0);
+						resp.setHeader("Content-Disposition", "attachment;filename=\"api_doc.html\"");
+
 						in = new FileInputStream(filePath);
 						int len = 0;
 						byte[] buf = new byte[1024];
@@ -115,7 +120,6 @@ public class Fastjava extends HttpServlet {
 							out.write(buf, 0, len);
 						}
 
-				        resp.setHeader("content-disposition", "attachment;filename=\"api_doc.html\"");
 						isReHtml = false;
 					} catch (Exception e) {
 						returnJs.append("alert('保存html出错！');");

@@ -1,8 +1,6 @@
 package com.fastjavaframework.support.servlet;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -11,6 +9,7 @@ import java.util.regex.Pattern;
 
 import com.fastjavaframework.base.BaseBean;
 import com.fastjavaframework.base.BaseService;
+import com.fastjavaframework.support.html.ApiHelperTemplateHtml;
 import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSON;
@@ -44,7 +43,7 @@ public class APIHelper {
 		for(String path : paths) {
 			String rePath = "\"" + path.replaceAll("\\\\", "\\\\\\\\") + "\"";
 			
-			if(path.indexOf("action") != -1 && path.indexOf("class") == -1) {
+			if((path.indexOf("action") != -1 || path.indexOf("controller") != -1) && path.indexOf("class") == -1) {
 				replaceMap.put("controllerPath", rePath);
 			}
 		}
@@ -354,14 +353,14 @@ public class APIHelper {
 							paramterGenerosity = parameterClzStr.substring(parameterClzStr.indexOf("<") + 1, parameterClzStr.indexOf(">"));
 							paramClzForHtml = Class.forName(paramterGenerosity);
 							paramFlag = "list.";
-						} catch (ClassNotFoundException e) {
+						} catch (Exception e) {
 						}
 					} else if(paramterClz.isArray()) {	//数组
 						try {
 							paramterGenerosity = parameterClzStr.replace("[]","");
 							paramClzForHtml = Class.forName(paramterGenerosity);
 							paramFlag = "list.";
-						} catch (ClassNotFoundException e) {
+						} catch (Exception e) {
 						}
 					}
 
@@ -713,20 +712,28 @@ public class APIHelper {
 	 * @param html
 	 */
 	public String saveAsHTML(String html) {
+		FileOutputStream out = null;
+		OutputStreamWriter osw = null;
         try {
-			String tempHtml = FileUtil.readFile(this.getClass(), "../html/apiHelper_template.html");
+			String tmpHtml = new ApiHelperTemplateHtml().html().replace("api_doc_html", html.substring(1, html.length() - 1));
 
+			// 临时文件
 			File file = File.createTempFile("api_doc", ".html");
 			file.deleteOnExit();
 
-			BufferedWriter output = new BufferedWriter(new FileWriter(file));
-			output.write(tempHtml.replace("api_doc_html", html.substring(1, html.length() - 1)));
-			output.close();
+			out = new FileOutputStream(file);
+			osw = new OutputStreamWriter(out,"UTF-8");
+			osw.write(tmpHtml);
 
-	         return file.getAbsolutePath();
+			return file.getAbsolutePath();
         } catch (Exception e) {
-        	e.printStackTrace();
-        }
+        } finally {
+			try {
+				osw.close();
+				out.close();
+			} catch (IOException e) {
+			}
+		}
 
         return "";
 	}
@@ -744,10 +751,13 @@ public class APIHelper {
 	private String setParameterHtml(Class clz, String controllerInfo, String parameterName, String paramterFlag, String localIn, boolean isParamNull) {
 		if(CommonUtil.isModel(clz)) {
 			String[] clzPathItem = clz.toString().split("class")[1].split("\\.");
-			String projectPath = controllerInfo.split("\\" + File.separator + clzPathItem[0].trim() + File.separator + "\\")[0];
+			String projectPath = controllerInfo.split(clzPathItem[0].trim())[0];
 			String clzPath = projectPath;
-			for(String clzPathStr : clzPathItem) {
-				clzPath += File.separator + clzPathStr.trim();
+			for(int i=0; i<clzPathItem.length; i++) {
+				if(i > 0) {
+					clzPath += File.separator;
+				}
+				clzPath += clzPathItem[i].trim();
 			}
             clzPath += ".java";
 
