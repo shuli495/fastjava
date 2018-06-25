@@ -264,10 +264,13 @@ public class SecretUtil {
 			switch (type) {
 				case URL:
 					decoder = Base64.getUrlDecoder();
+					break;
 				case MIME:
 					decoder = Base64.getMimeDecoder();
+					break;
 				default:
 					decoder = Base64.getDecoder();
+					break;
 			}
 
 			byte[] asBytes = decoder.decode(content);
