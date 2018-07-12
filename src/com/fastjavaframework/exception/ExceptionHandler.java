@@ -13,7 +13,6 @@ import com.fastjavaframework.response.ReturnJson;
 import com.fastjavaframework.util.CommonUtil;
 import com.fastjavaframework.util.VerifyUtils;
 
-import java.util.Map;
 
 /**
  * 异常处理类

@@ -9,9 +9,23 @@ public class ThrowPrompt extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
 	public static final String RETRUN_PROMPT = "@Prompt:";	//返回前台提示 标记
+
+	private String code;
+	private String message;
+
+	public String getCode() {
+		return this.code;
+	}
+
+	@Override
+	public String getMessage() {
+		return this.message;
+	}
 	
-    public ThrowPrompt(String msg) {
-		super(HttpServletResponse.SC_BAD_REQUEST + "@int" + RETRUN_PROMPT + msg);
+    public ThrowPrompt(String message) {
+		super(HttpServletResponse.SC_BAD_REQUEST + "@int" + RETRUN_PROMPT + message);
+
+		this.message = message;
     }
 
 	/**
@@ -21,6 +35,9 @@ public class ThrowPrompt extends RuntimeException {
      */
 	public ThrowPrompt(String message, String code) {
 		super(code + "@String" + RETRUN_PROMPT + message);
+
+		this.message = message;
+		this.code = code;
 	}
 
 	/**
@@ -30,5 +47,8 @@ public class ThrowPrompt extends RuntimeException {
      */
 	public ThrowPrompt(String message, int code) {
 		super(code + "@int" + RETRUN_PROMPT + message);
+
+		this.message = message;
+		this.code = String.valueOf(code);
 	}
 }
