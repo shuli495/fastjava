@@ -62,7 +62,7 @@ public class VerifyUtils {
 	 * @param ipString
 	 * @return true 格式正确 false 格式错误
 	 */
-	public Boolean isIpAdd(String ipString) {
+	public static Boolean isIpAdd(String ipString) {
 		String regex = "\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(ipString);
@@ -71,11 +71,11 @@ public class VerifyUtils {
 
 	/**
 	 * 验证邮箱格式
-	 * 
+	 *
 	 * @param mail 邮箱
 	 * @return true 格式正确 false 格式错误
 	 */
-	public boolean verifyMail(String mail) {
+	public static boolean verifyMail(String mail) {
 		String regex = "^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\\.([a-zA-Z0-9_-])+)+$";
 		Pattern p = Pattern.compile(regex);
 		Matcher m = p.matcher(mail);

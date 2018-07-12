@@ -3,7 +3,6 @@ package com.fastjavaframework.base;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.fastjavaframework.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fastjavaframework.response.ReturnJson;
