@@ -1,5 +1,13 @@
 package com.fastjavaframework.util;
 
+import com.fastjavaframework.common.SecretBase64Enum;
+import com.fastjavaframework.exception.ThrowException;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,15 +18,6 @@ import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
-
-import com.fastjavaframework.common.SecretBase64Enum;
-import com.fastjavaframework.exception.ThrowException;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * MD5工具类
@@ -168,7 +167,11 @@ public class SecretUtil {
 		try {
 			// 根据secret初始化密码
 			KeyGenerator kgen = KeyGenerator.getInstance("AES");
-			kgen.init(128, new SecureRandom(secret.getBytes()));
+
+			SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG") ;
+			secureRandom.setSeed(secret.getBytes());
+
+			kgen.init(128, secureRandom);
 			SecretKey secretKey = kgen.generateKey();
 
 			// 转换为AES专用密钥
@@ -198,7 +201,11 @@ public class SecretUtil {
 	public static String aes128Decrypt(String content, String secret) {
 		try {
 			KeyGenerator kgen = KeyGenerator.getInstance("AES");
-			kgen.init(128, new SecureRandom(secret.getBytes()));
+
+			SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG") ;
+			secureRandom.setSeed(secret.getBytes());
+
+			kgen.init(128, secureRandom);
 			SecretKey secretKey = kgen.generateKey();
 
 			byte[] enCodeFormat = secretKey.getEncoded();
