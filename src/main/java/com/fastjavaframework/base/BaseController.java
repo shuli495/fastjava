@@ -1,18 +1,17 @@
 package com.fastjavaframework.base;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.fastjavaframework.response.ReturnJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fastjavaframework.response.ReturnJson;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author wangshuli
  */
-public class BaseController<B extends BaseService<?, ?>> {
+public class BaseController<B> {
 
 	protected static Logger logger = LoggerFactory.getLogger(BaseController.class);
 
