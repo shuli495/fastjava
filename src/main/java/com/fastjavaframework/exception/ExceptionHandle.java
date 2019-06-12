@@ -1,17 +1,18 @@
 package com.fastjavaframework.exception;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.alibaba.fastjson.JSON;
 import com.fastjavaframework.FastjavaSpringBootConfig;
+import com.fastjavaframework.common.ExceptionCodeTypeEnum;
+import com.fastjavaframework.response.ReturnJson;
+import com.fastjavaframework.util.VerifyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fastjavaframework.response.ReturnJson;
-import com.fastjavaframework.util.VerifyUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 
 /**
@@ -38,24 +39,29 @@ public class ExceptionHandle {
 		ReturnJson returnJson = new ReturnJson(request);
 		Object result = null;
 
-		//错误信息 格式化空指针异常
-		String nullPointer = HttpServletResponse.SC_INTERNAL_SERVER_ERROR + ThrowException.RETRUN_EXCEPTION + "java.lang.NullPointerException";
-		String eMessage = VerifyUtils.isEmpty(ex.getMessage()) ? nullPointer : ex.getMessage();
+		//错误信息
+		ExceptionModel exceptionModel = null;
+		if(VerifyUtils.isEmpty(ex.getMessage())) {
+			// 格式化空指针异常
+			exceptionModel = new ExceptionModel(HttpServletResponse.SC_INTERNAL_SERVER_ERROR+"",
+					ExceptionCodeTypeEnum.NUMBER, "java.lang.NullPointerException");
+		} else {
+			exceptionModel = JSON.parseObject(ex.getMessage(), ExceptionModel.class);
+		}
 
-		String[] prompts = eMessage.split(ThrowPrompt.RETRUN_PROMPT);
-		String[] codes = prompts[0].split("@");
+		String msg = exceptionModel.getMessage();
+		String code = exceptionModel.getCode();
+		String codeType = exceptionModel.getCodeType().toString();
 
-		String msg = prompts[1];
-		String code = codes[0];
-		String codeType = codes[1];
-
-		if(int.class.getName().equals(codeType)) {
+		if(FastjavaSpringBootConfig.Exception.isResponseStatus200) {
+			response.setStatus(HttpServletResponse.SC_OK);
+		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
 			response.setStatus(Integer.valueOf(code));
-			result = returnJson.prompt(msg, code);
 		} else {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			result = returnJson.prompt(msg, code);
 		}
+
+		result = returnJson.prompt(msg, code);
 
 		//返回前台异常
 		return result;
@@ -74,20 +80,25 @@ public class ExceptionHandle {
 		ReturnJson returnJson = new ReturnJson(request);
 		Object result = null;
 
-		//错误信息 格式化空指针异常
-		String nullPointer = HttpServletResponse.SC_INTERNAL_SERVER_ERROR + ThrowException.RETRUN_EXCEPTION + "java.lang.NullPointerException";
-		String eMessage = VerifyUtils.isEmpty(ex.getMessage()) ? nullPointer : ex.getMessage();
-
-		String[] exceptions = eMessage.split(ThrowException.RETRUN_EXCEPTION);
-
-		String code = String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		//处理系统排出错误
-		if(exceptions.length == 1) {
-			eMessage = exceptions[0];
+		//错误信息
+		ExceptionModel exceptionModel = null;
+		if(VerifyUtils.isEmpty(ex.getMessage())) {
+			// 格式化空指针异常
+			exceptionModel = new ExceptionModel(HttpServletResponse.SC_INTERNAL_SERVER_ERROR+"",
+					ExceptionCodeTypeEnum.NUMBER, "java.lang.NullPointerException");
 		} else {
-			code = exceptions[0];
-			eMessage = exceptions[1];
+			try {
+				exceptionModel = JSON.parseObject(ex.getMessage(), ExceptionModel.class);
+			} catch (Exception e) {
+				// 处理系统排出错误
+				exceptionModel = new ExceptionModel(HttpServletResponse.SC_INTERNAL_SERVER_ERROR+"",
+						ExceptionCodeTypeEnum.NUMBER, ex.getMessage());
+			}
 		}
+
+		String code = exceptionModel.getCode();
+		String eMessage = exceptionModel.getMessage();
+		String codeType = exceptionModel.getCodeType().toString();
 
 		//返回提示信息
 		String defMsg = FastjavaSpringBootConfig.Exception.message;
@@ -95,30 +106,19 @@ public class ExceptionHandle {
 			eMessage = defMsg;
 		}
 
-		String codeStr = String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		if(code.indexOf("@") != -1) {
-			String[] codes = code.split("@");
-			String codeVal = codes[0];
-			String codeType = codes[1];
-
-			if(int.class.getName().equals(codeType)) {
-				response.setStatus(Integer.valueOf(codeVal));
-				result = returnJson.exception(eMessage, codeVal);
-			} else {
-				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				result = returnJson.exception(eMessage, codeVal);
-			}
-
-			codeStr = codeVal;
+		if(FastjavaSpringBootConfig.Exception.isResponseStatus200) {
+			response.setStatus(HttpServletResponse.SC_OK);
+		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
+			response.setStatus(Integer.valueOf(code));
 		} else {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			result = returnJson.exception(eMessage, code);
 		}
+		result = returnJson.exception(eMessage, code);
 
 		//异常日志
 		StringBuffer exMsg = new StringBuffer();
 
-		exMsg.append("\nCode:").append(codeStr).append("\n")
+		exMsg.append("\nCode:").append(code).append("\n")
 				.append("Exception:\n\t")
 				.append(eMessage).append("\n")
 				.append("Method:\n");

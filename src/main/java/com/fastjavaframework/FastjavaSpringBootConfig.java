@@ -28,6 +28,19 @@ public class FastjavaSpringBootConfig {
          * 自定义错误信息
          */
         public static String message;
+
+        /**
+         * response状态是否一直返回200
+         */
+        public static boolean isResponseStatus200;
+
+        public static void setMessage(String message) {
+            Exception.message = message;
+        }
+
+        public static void setIsResponseStatus200(boolean isResponseStatus200) {
+            Exception.isResponseStatus200 = isResponseStatus200;
+        }
     }
 
     public void setException(Exception exception) {

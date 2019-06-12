@@ -1,5 +1,8 @@
 package com.fastjavaframework.exception;
 
+import com.alibaba.fastjson.JSON;
+import com.fastjavaframework.common.ExceptionCodeTypeEnum;
+
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -13,7 +16,6 @@ public class ThrowException extends RuntimeException {
 	/**
 	 * 返回前台提示 标记
 	 */
-	public static final String RETRUN_EXCEPTION = "@Exception:";
 	public static final String RETRUN_EXCEPTION_NAME = "exception:";
 
 	/**
@@ -35,7 +37,8 @@ public class ThrowException extends RuntimeException {
 	}
 
 	public ThrowException(String message) {
-		super(HttpServletResponse.SC_INTERNAL_SERVER_ERROR + "@int" + RETRUN_EXCEPTION + message);
+		super(JSON.toJSONString(new ExceptionModel(HttpServletResponse.SC_INTERNAL_SERVER_ERROR + "",
+				ExceptionCodeTypeEnum.NUMBER, message)));
 
 		this.message = message;
 	}
@@ -46,7 +49,7 @@ public class ThrowException extends RuntimeException {
 	 * @param code
 	 */
 	public ThrowException(String message, String code) {
-		super(code + "@String" + RETRUN_EXCEPTION + message);
+		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message)));
 
 		this.message = message;
 		this.code = code;
@@ -58,7 +61,7 @@ public class ThrowException extends RuntimeException {
 	 * @param code
 	 */
 	public ThrowException(String message, int code) {
-		super(code + "@int" + RETRUN_EXCEPTION + message);
+		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message)));
 
 		this.message = message;
 		this.code = String.valueOf(code);
