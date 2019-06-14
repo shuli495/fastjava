@@ -16,7 +16,7 @@ public class FastjavaSpringBootConfig {
     /**
      * 异常设置
      */
-    public static Exception exception;
+    public static Exception exception = new Exception();
 
     /**
      * 是否设置全选url
@@ -27,19 +27,27 @@ public class FastjavaSpringBootConfig {
         /**
          * 自定义错误信息
          */
-        public static String message;
+        private String message;
 
         /**
          * response状态是否一直返回200
          */
-        public static boolean isResponseStatus200;
+        private boolean isResponseStatus200;
 
-        public static void setMessage(String message) {
-            Exception.message = message;
+        public String message() {
+            return message;
         }
 
-        public static void setIsResponseStatus200(boolean isResponseStatus200) {
-            Exception.isResponseStatus200 = isResponseStatus200;
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public boolean isResponseStatus200() {
+            return isResponseStatus200;
+        }
+
+        public void setResponseStatus200(boolean responseStatus200) {
+            this.isResponseStatus200 = responseStatus200;
         }
     }
 

@@ -53,7 +53,7 @@ public class ExceptionHandle {
 		String code = exceptionModel.getCode();
 		String codeType = exceptionModel.getCodeType().toString();
 
-		if(FastjavaSpringBootConfig.Exception.isResponseStatus200) {
+		if(FastjavaSpringBootConfig.exception.isResponseStatus200()) {
 			response.setStatus(HttpServletResponse.SC_OK);
 		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
 			response.setStatus(Integer.valueOf(code));
@@ -101,12 +101,12 @@ public class ExceptionHandle {
 		String codeType = exceptionModel.getCodeType().toString();
 
 		//返回提示信息
-		String defMsg = FastjavaSpringBootConfig.Exception.message;
+		String defMsg = FastjavaSpringBootConfig.exception.message();
 		if(VerifyUtils.isNotEmpty(defMsg)) {
 			eMessage = defMsg;
 		}
 
-		if(FastjavaSpringBootConfig.Exception.isResponseStatus200) {
+		if(FastjavaSpringBootConfig.exception.isResponseStatus200()) {
 			response.setStatus(HttpServletResponse.SC_OK);
 		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
 			response.setStatus(Integer.valueOf(code));
