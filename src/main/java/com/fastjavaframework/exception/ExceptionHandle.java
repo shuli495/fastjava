@@ -26,6 +26,13 @@ import javax.servlet.http.HttpServletResponse;
 public class ExceptionHandle {
 	private static Logger logger = LoggerFactory.getLogger(ExceptionHandle.class);
 
+
+	@ExceptionHandler(Exception.class)
+	@ResponseBody
+	public Object javaException(HttpServletRequest request, HttpServletResponse response, Exception ex) {
+		return ex.getMessage();
+	}
+
 	/**
 	 * 错误
 	 * @param request
@@ -37,7 +44,6 @@ public class ExceptionHandle {
 	@ResponseBody
 	public Object prompt(HttpServletRequest request, HttpServletResponse response, Exception ex) {
 		ReturnJson returnJson = new ReturnJson(request);
-		Object result = null;
 
 		//错误信息
 		ExceptionModel exceptionModel = null;
@@ -53,18 +59,16 @@ public class ExceptionHandle {
 		String code = exceptionModel.getCode();
 		String codeType = exceptionModel.getCodeType().toString();
 
-		if(FastjavaSpringBootConfig.exception.isResponseStatus200()) {
-			response.setStatus(HttpServletResponse.SC_OK);
+		// 设置状态码
+		int status = HttpServletResponse.SC_BAD_REQUEST;
+		if(FastjavaSpringBootConfig.exception.responstOk()) {
+			status = HttpServletResponse.SC_OK;
 		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
-			response.setStatus(Integer.valueOf(code));
-		} else {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			status = Integer.valueOf(code);
 		}
+		response.setStatus(status);
 
-		result = returnJson.prompt(msg, code);
-
-		//返回前台异常
-		return result;
+		return returnJson.prompt(msg, code);
 	}
 
 	/**
@@ -78,7 +82,6 @@ public class ExceptionHandle {
 	@ResponseBody
 	public Object exception(HttpServletRequest request, HttpServletResponse response, Exception ex) {
 		ReturnJson returnJson = new ReturnJson(request);
-		Object result = null;
 
 		//错误信息
 		ExceptionModel exceptionModel = null;
@@ -106,18 +109,8 @@ public class ExceptionHandle {
 			eMessage = defMsg;
 		}
 
-		if(FastjavaSpringBootConfig.exception.isResponseStatus200()) {
-			response.setStatus(HttpServletResponse.SC_OK);
-		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
-			response.setStatus(Integer.valueOf(code));
-		} else {
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		}
-		result = returnJson.exception(eMessage, code);
-
 		//异常日志
 		StringBuffer exMsg = new StringBuffer();
-
 		exMsg.append("\nCode:").append(code).append("\n")
 				.append("Exception:\n\t")
 				.append(eMessage).append("\n")
@@ -129,7 +122,16 @@ public class ExceptionHandle {
 
 		logger.error(exMsg.toString());
 
+		// 设置状态码
+		int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+		if(FastjavaSpringBootConfig.exception.responstOk()) {
+			status = HttpServletResponse.SC_OK;
+		} else if(ExceptionCodeTypeEnum.NUMBER.equals(codeType)) {
+			status = Integer.valueOf(code);
+		}
+		response.setStatus(status);
+
 		//返回前台异常
-		return result;
+		return returnJson.exception(eMessage, code);
 	}
 }

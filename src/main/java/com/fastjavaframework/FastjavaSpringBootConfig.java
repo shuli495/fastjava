@@ -32,7 +32,7 @@ public class FastjavaSpringBootConfig {
         /**
          * response状态是否一直返回200
          */
-        private boolean isResponseStatus200;
+        private boolean responstOk;
 
         public String message() {
             return message;
@@ -42,12 +42,12 @@ public class FastjavaSpringBootConfig {
             this.message = message;
         }
 
-        public boolean isResponseStatus200() {
-            return isResponseStatus200;
+        public boolean responstOk() {
+            return responstOk;
         }
 
-        public void setResponseStatus200(boolean responseStatus200) {
-            this.isResponseStatus200 = responseStatus200;
+        public void setResponstOk(boolean responstOk) {
+            this.responstOk = responstOk;
         }
     }
 
