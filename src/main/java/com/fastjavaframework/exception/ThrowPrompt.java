@@ -16,7 +16,7 @@ public class ThrowPrompt extends RuntimeException {
 	/**
 	 * 返回前台提示 标记
 	 */
-	public static final String RETRUN_PROMPT_NAME = "prompt:";
+	public static final String RETRUN_PROMPT_NAME = "prompt";
 
 	/**
 	 * http状态码

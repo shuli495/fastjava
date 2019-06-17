@@ -16,7 +16,7 @@ public class ThrowException extends RuntimeException {
 	/**
 	 * 返回前台提示 标记
 	 */
-	public static final String RETRUN_EXCEPTION_NAME = "exception:";
+	public static final String RETRUN_EXCEPTION_NAME = "exception";
 
 	/**
 	 * http状态码

@@ -1,9 +1,5 @@
 package com.fastjavaframework.response;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.alibaba.fastjson.JSONObject;
 import com.fastjavaframework.exception.ThrowException;
 import com.fastjavaframework.exception.ThrowPrompt;
@@ -11,6 +7,9 @@ import com.fastjavaframework.util.VerifyUtils;
 import org.springframework.http.HttpMethod;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 返回前台json格式数据
@@ -162,28 +161,28 @@ public class ReturnJson {
 	 * 返回提示信息
 	 */
 	public Object prompt(String message) {
-		return setReturnInfo("prompt", null, message, null);
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, null, message, null);
 	}
 
 	/**
 	 * 返回提示信息
 	 */
 	public Object prompt(String message, String code) {
-		return setReturnInfo("prompt", code, message, null);
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, code, message, null);
 	}
 
 	/**
 	 * 返回异常
 	 */
 	public Object exception(String message) {
-		return setReturnInfo("exception", null, message, null);
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, null, message, null);
 	}
 
 	/**
 	 * 返回异常
 	 */
 	public Object exception(String message, String code) {
-		return setReturnInfo("exception", code, message, null);
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, code, message, null);
 	}
 	
 }
