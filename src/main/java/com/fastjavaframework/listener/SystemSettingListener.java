@@ -41,6 +41,9 @@ public class SystemSettingListener extends AbstractContextListener {
 				if(null != clzRmAnnotation && clzRmAnnotation.value().length > 0) {
 					clzUris.addAll(Arrays.asList(clzRmAnnotation.value()));
 				}
+				if(clzUris.size() == 0) {
+					clzUris.add("");
+				}
 
 				for(Method method : clz.getMethods()) {
 					// 有@Authority的方法

@@ -32,7 +32,12 @@ public class FastjavaSpringBootConfig {
         /**
          * response状态是否一直返回200
          */
-        private boolean responstOk;
+        private boolean responseOk;
+
+        /**
+         * prompt是否显示堆栈
+         */
+        private boolean promptStack;
 
         public String message() {
             return message;
@@ -42,12 +47,20 @@ public class FastjavaSpringBootConfig {
             this.message = message;
         }
 
-        public boolean responstOk() {
-            return responstOk;
+        public boolean responseOk() {
+            return responseOk;
         }
 
-        public void setResponstOk(boolean responstOk) {
-            this.responstOk = responstOk;
+        public void setResponseOk(boolean responseOk) {
+            this.responseOk = responseOk;
+        }
+
+        public boolean promptStack() {
+            return promptStack;
+        }
+
+        public void setPromptStack(boolean promptStack) {
+            this.promptStack = promptStack;
         }
     }
 

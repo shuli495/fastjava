@@ -35,13 +35,20 @@ public class ThrowPrompt extends RuntimeException {
 	public String getDetailMessage() {
 		return this.message;
 	}
-	
-    public ThrowPrompt(String message) {
+
+	public ThrowPrompt(String message) {
 		super(JSON.toJSONString(new ExceptionModel(HttpServletResponse.SC_BAD_REQUEST + "",
-				ExceptionCodeTypeEnum.NUMBER, message)));
+				ExceptionCodeTypeEnum.NUMBER, message, null)));
 
 		this.message = message;
-    }
+	}
+
+	public ThrowPrompt(String message, Object data) {
+		super(JSON.toJSONString(new ExceptionModel(HttpServletResponse.SC_BAD_REQUEST + "",
+				ExceptionCodeTypeEnum.NUMBER, message, data)));
+
+		this.message = message;
+	}
 
 	/**
 	 * HTTP状态码为400，返回json数据中包含code
@@ -49,7 +56,19 @@ public class ThrowPrompt extends RuntimeException {
 	 * @param code
      */
 	public ThrowPrompt(String message, String code) {
-		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message)));
+		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message, null)));
+
+		this.message = message;
+		this.code = code;
+	}
+
+	/**
+	 * HTTP状态码为400，返回json数据中包含code
+	 * @param message
+	 * @param code
+	 */
+	public ThrowPrompt(String message, String code, Object data) {
+		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message, data)));
 
 		this.message = message;
 		this.code = code;
@@ -61,7 +80,19 @@ public class ThrowPrompt extends RuntimeException {
 	 * @param code
      */
 	public ThrowPrompt(String message, int code) {
-		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message)));
+		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message, null)));
+
+		this.message = message;
+		this.code = String.valueOf(code);
+	}
+
+	/**
+	 * HTTP状态码为code
+	 * @param message
+	 * @param code
+	 */
+	public ThrowPrompt(String message, int code, Object data) {
+		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message, data)));
 
 		this.message = message;
 		this.code = String.valueOf(code);

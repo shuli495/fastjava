@@ -38,7 +38,7 @@ public class ThrowException extends RuntimeException {
 
 	public ThrowException(String message) {
 		super(JSON.toJSONString(new ExceptionModel(HttpServletResponse.SC_INTERNAL_SERVER_ERROR + "",
-				ExceptionCodeTypeEnum.NUMBER, message)));
+				ExceptionCodeTypeEnum.NUMBER, message, null)));
 
 		this.message = message;
 	}
@@ -49,7 +49,7 @@ public class ThrowException extends RuntimeException {
 	 * @param code
 	 */
 	public ThrowException(String message, String code) {
-		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message)));
+		super(JSON.toJSONString(new ExceptionModel(code, ExceptionCodeTypeEnum.STRING, message, null)));
 
 		this.message = message;
 		this.code = code;
@@ -61,7 +61,7 @@ public class ThrowException extends RuntimeException {
 	 * @param code
 	 */
 	public ThrowException(String message, int code) {
-		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message)));
+		super(JSON.toJSONString(new ExceptionModel(code + "", ExceptionCodeTypeEnum.NUMBER, message, null)));
 
 		this.message = message;
 		this.code = String.valueOf(code);

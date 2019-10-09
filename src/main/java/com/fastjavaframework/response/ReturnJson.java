@@ -62,7 +62,7 @@ public class ReturnJson {
 	 * @param reObj 返回信息
 	 * @return Response
 	 */
-	private Object setReturnInfo(String type, String code, Object reObj, String returnKey) {
+	private Object setReturnInfo(String type, String code, Object reObj, String returnKey, Object errData) {
 		Object data = null;
 		String message = "success";
 
@@ -81,7 +81,7 @@ public class ReturnJson {
 		//提示
 		if(ThrowPrompt.RETRUN_PROMPT_NAME.equals(type)) {
 			message = reObj.toString();
-			data = null;
+			data = null!=errData?errData:null;
 		} else if(ThrowException.RETRUN_EXCEPTION_NAME.equals(type)) {
 			//异常
 			if(!VerifyUtils.isEmpty(reObj)) {
@@ -89,7 +89,7 @@ public class ReturnJson {
 			} else {
 				message = "请稍后再试！";
 			}
-			data = null;
+			data = null!=errData?errData:null;
 		}
 
 		Result result = new Result();
@@ -114,7 +114,7 @@ public class ReturnJson {
 	 * 返回success
 	 */
 	public Object success() {
-		return this.setReturnInfo("success", null, "success", null);
+		return this.setReturnInfo("success", "200", "success", null, null);
 	}
 	
 	/**
@@ -123,7 +123,7 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(Object returnObj) {
-		return this.setReturnInfo("success", null, returnObj, null);
+		return this.setReturnInfo("success", "200", returnObj, null, null);
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(Object returnObj, String code) {
-		return this.setReturnInfo("success", code, returnObj, null);
+		return this.setReturnInfo("success", code, returnObj, null, null);
 	}
 
 	/**
@@ -143,7 +143,7 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(String returnStrKey, Object returnStrVal) {
-		return setReturnInfo("success", null, returnStrVal, returnStrKey);
+		return setReturnInfo("success", "200", returnStrVal, returnStrKey, null);
 	}
 
 	/**
@@ -154,35 +154,63 @@ public class ReturnJson {
 	 * @return
 	 */
 	public Object success(String returnStrKey, Object returnStrVal, String code) {
-		return setReturnInfo("success", code, returnStrVal, returnStrKey);
+		return setReturnInfo("success", code, returnStrVal, returnStrKey, null);
 	}
 
 	/**
 	 * 返回提示信息
 	 */
 	public Object prompt(String message) {
-		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, null, message, null);
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, "400", message, null, null);
+	}
+
+	/**
+	 * 返回提示信息
+	 */
+	public Object prompt(String message, Object data) {
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, "400", message, null, data);
 	}
 
 	/**
 	 * 返回提示信息
 	 */
 	public Object prompt(String message, String code) {
-		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, code, message, null);
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, code, message, null, null);
+	}
+
+	/**
+	 * 返回提示信息
+	 */
+	public Object prompt(String message, String code, Object data) {
+		return setReturnInfo(ThrowPrompt.RETRUN_PROMPT_NAME, code, message, null, data);
 	}
 
 	/**
 	 * 返回异常
 	 */
 	public Object exception(String message) {
-		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, null, message, null);
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, "500", message, null, null);
+	}
+
+	/**
+	 * 返回异常
+	 */
+	public Object exception(String message, Object data) {
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, "500", message, null, data);
 	}
 
 	/**
 	 * 返回异常
 	 */
 	public Object exception(String message, String code) {
-		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, code, message, null);
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, code, message, null, null);
+	}
+
+	/**
+	 * 返回异常
+	 */
+	public Object exception(String message, String code, Object data) {
+		return setReturnInfo(ThrowException.RETRUN_EXCEPTION_NAME, code, message, null, data);
 	}
 	
 }
