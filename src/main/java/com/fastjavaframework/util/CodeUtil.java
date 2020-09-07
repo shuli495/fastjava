@@ -21,16 +21,17 @@ public class CodeUtil {
     public static String randomCode(String type, int number) {
         ArrayList<Object> list = new ArrayList<>();
         // 验证码类型
-        String typeNum = "num";
-        String typeStr = "str";
+        String typeNum = "num",typeStr = "str";
+        char beginChar = 'a',endChar='z';
+        int maxNumber = 9;
 
         if (!typeNum.equals(type)) {
-            for (char c = 'a'; c <= 'z'; c++) {
+            for (char c = beginChar; c <= endChar; c++) {
                 list.add(c);
             }
         }
         if (!typeStr.equals(type)) {
-            for (int i = 0; i <= 9; i++) {
+            for (int i = 0; i <= maxNumber; i++) {
                 list.add(i);
             }
         }

@@ -133,17 +133,17 @@ public class PageInterceptor implements Interceptor {
         ResultSet rs = null;
         try {
             countStmt = connection.prepareStatement(countSql);
-            BoundSql countBS = new BoundSql(mappedStatement.getConfiguration(), countSql,
+            BoundSql countBs = new BoundSql(mappedStatement.getConfiguration(), countSql,
                     boundSql.getParameterMappings(), boundSql.getParameterObject());
             
             //由于该物理分页不支持mybatis的<foreach>标签，so对该分页做一下更改 
             Field metaParamsField = getFieldByFieldName(boundSql, "metaParameters");
 			if (metaParamsField != null) {
 				MetaObject mo = (MetaObject) getValueByFieldName(boundSql, "metaParameters");
-				setValueByFieldName(countBS, "metaParameters", mo);
+				setValueByFieldName(countBs, "metaParameters", mo);
 			}
 			
-            setParameters(countStmt, mappedStatement, countBS, boundSql.getParameterObject());
+            setParameters(countStmt, mappedStatement, countBs, boundSql.getParameterObject());
             rs = countStmt.executeQuery();
             int totalCount = 0;
             if (rs.next()) {

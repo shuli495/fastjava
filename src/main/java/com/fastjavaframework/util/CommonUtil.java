@@ -217,7 +217,7 @@ public class CommonUtil {
 	 * @param js 脚本
 	 * @return 返回""运算错误
 	 */
-	public static Object runJS(String js) {
+	public static Object runJs(String js) {
 		ScriptEngineManager manager = new ScriptEngineManager();
 		ScriptEngine se = manager.getEngineByName("js");
 		try {

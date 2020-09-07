@@ -4,6 +4,8 @@ import com.fastjavaframework.common.ExceptionCodeTypeEnum;
 
 /**
  * 异常类model
+ *
+ * @author https://github.com/shuli495/erlangshen
  */
 public class ExceptionModel {
     private String code;
